@@ -1,8 +1,8 @@
 [package]
 name = "embed-resource"
 description = "A Cargo library to handle compilation and inclusion of Windows resources in the most resilient fashion imaginable"
-documentation = "https://cdn.rawgit.com/nabijaczleweli/embed-resource/doc/embed_resource/index.html"
-repository = "https://github.com/nabijaczleweli/rust_embed-resource"
+documentation = "https://cdn.rawgit.com/nabijaczleweli/rust-embed-resource/doc/embed_resource/index.html"
+repository = "https://github.com/nabijaczleweli/rust-embed-resource"
 readme = "README.md"
 keywords = ["cargo", "build", "windows", "resource", "manifest"]
 categories = ["development-tools", "os::windows-apis"]
