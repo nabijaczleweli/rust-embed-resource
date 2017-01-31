@@ -21,10 +21,6 @@ build_script:
   - git submodule update --init --recursive
   - cargo build --verbose --release
 
-test: off
-test_script:
-  - cargo test --verbose --release
-
 notifications:
   - provider: Email
     to:
