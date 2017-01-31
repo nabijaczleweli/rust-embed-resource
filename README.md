@@ -12,29 +12,9 @@ In your build script, assuming the crate's name is "checksums" and the resource 
 extern crate embed_resource;
 
 fn main() {
-    // Compile file checksums.rc to be linkable as checksums-manifest in $OUT_DIR
-    embed_resource::compile("checksums.rc", None, None);
+    // Compile and link checksums.rc
+    embed_resource::compile("checksums.rc");
 }
-```
-
-Then, in `main.rs`:
-
-```rust
-#[cfg(target_os="windows")]
-#[link(name="checksums-manifest", kind="static")]
-extern "C" {}
-```
-
-If you want to link as something else (like `chksum-rc`):
-
-```rust
-embed_resource::compile("checksums.rc", Some("chksum-rc"), None);
-```
-
-```rust
-#[cfg(target_os="windows")]
-#[link(name="chksum-rc", kind="static")]
-extern "C" {}
 ```
 
 ## Credit
@@ -48,3 +28,5 @@ In chronological order:
 [@TheCatPlusPlus](https://github.com/TheCatPlusPlus) -- knowledge and providing first iteration of manifest-embedding code
 
 [@azyobuzin](https://github.com/azyobuzin) -- providing code for finding places where RC.EXE could hide
+
+[@retep998](https://github.com/retep998) -- fixing MSVC support

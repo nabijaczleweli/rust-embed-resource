@@ -2,11 +2,11 @@ use std::path::{PathBuf, Path};
 use std::process::Command;
 use winreg::enums::*;
 use std::env;
-
+use winreg;
 
 pub const SUPPORTED: bool = true;
 
-#[derive(Clone, Hash, Copy, Eq, PartialEq, Cmp, PartialCmp)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 enum Arch {
     X86,
     X64,

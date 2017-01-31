@@ -24,32 +24,9 @@
 //! (https://chat.stackoverflow.com/transcript/message/35378953#35378953)
 //! to extract it to a crate, here we are.
 //!
-//! # Usage (overview)
+//! # Usage
 //!
-//! Since the [build script](http://doc.crates.io/build-script.html) documentation is trash and
-//! [build script handling is even more trash]
-//! (https://github.com/nabijaczleweli/cargo-update/commit/ef4346c#diff-639fbc4ef05b315af92b4d836c31b023),
-//! we can't print a build script line to link to the compiled resource file. Instead, you need to use and `extern`
-//! block in your `main.rs` file like so:
-//!
-//! ```rust,ignore
-//! #[cfg(target_os="windows")]
-//! #[link(name="checksums-manifest", kind="static")]
-//! extern "C" {}
-//!
-//! // Your main() and w/e
-//! ```
-//!
-//! Since the manifest is only generated on Windows, the `cfg` attribute takes care of that.
-//!
-//! The `name` attribute argument is either:
-//!
-//!   * The name of the crate + "-manifest" by default, or
-//!   * The second argument to `compile()`.
-//!
-//! # Usage (detailed)
-//!
-//! For the purposes of the demonstration we will assume that the crate's name is "checksums" and that the resource file's name
+//! For the purposes of the demonstration we will assume that the resource file's name
 //! is "checksums.rc".
 //!
 //! In `Cargo.toml`:
@@ -68,51 +45,9 @@
 //! extern crate embed_resource;
 //!
 //! fn main() {
-//!     embed_resource::compile("checksums.rc", None, None);
+//!     embed_resource::compile("checksums.rc");
 //! }
 //! ```
-//!
-//! In `main.rs`:
-//!
-//! ```rust,ignore
-//! #[cfg(target_os="windows")]
-//! #[link(name="checksums-manifest", kind="static")]
-//! extern "C" {}
-//! ```
-//!
-//! If, however, you want to use a different manifest link name (here: "chksum-rc"):
-//!
-//! In `build.rs`:
-//!
-//! ```rust,no-run
-//! extern crate embed_resource;
-//!
-//! fn main() {
-//!     embed_resource::compile("checksums.rc", Some("chksum-rc"), None);
-//! }
-//! ```
-//!
-//! In `main.rs`:
-//!
-//! ```rust,ignore
-//! #[cfg(target_os="windows")]
-//! #[link(name="chksum-rc", kind="static")]
-//! extern "C" {}
-//! ```
-//!
-//! If, for an unfathomable reason, you want to create the resource archive in a different location:
-//!
-//! In `build.rs`:
-//!
-//! ```rust,no-run
-//! extern crate embed_resource;
-//!
-//! fn main() {
-//!     embed_resource::compile("checksums.rc", None, Some("C:/Rast/build-files-output"));
-//! }
-//! ```
-//!
-//! I souldn't recommend this, but hey.
 //!
 //! # Credit
 //!
@@ -125,7 +60,8 @@
 //! [@TheCatPlusPlus](https://github.com/TheCatPlusPlus) -- knowledge and providing first iteration of manifest-embedding code
 //!
 //! [@azyobuzin](https://github.com/azyobuzin) -- providing code for finding places where RC.EXE could hide
-
+//!
+//! [@retep998](https://github.com/retep998) -- fixing MSVC support
 
 #[cfg(all(windows, target_env = "msvc"))]
 extern crate winreg;
@@ -145,17 +81,14 @@ use self::windows_msvc::*;
 use self::windows_not_msvc::*;
 
 use std::env;
+use std::path::Path;
 
 
 /// Compile the Windows resource file and update the cargo search path if we're on Windows.
 ///
-/// `prefix`, if `None`, defaults to `"$CARGO_PKG_NAME-manifest"`, this is the name you'll link to in `main.rs`.
-///
-/// `out_dir`, if `None`, defaults to `$OUT_DIR`, which you probably don't want to change.
-///
 /// On non-Windows this does nothing, on non-MSVC Windows, this chains `windres` with `ar`,
 /// but on MSVC Windows, this will try its hardest to find `RC.EXE` in Windows Kits and/or SDK directories
-/// (because someone thought not putting it in `$PATH` was a great idea).
+/// (because rustc supports VC++ without being in a VC++ dev environment, so we have to as well).
 ///
 /// # Examples
 ///
@@ -165,27 +98,18 @@ use std::env;
 /// extern crate embed_resource;
 ///
 /// fn main() {
-///     // Compile file checksums.rc to be linkable as checksums-manifest in $OUT_DIR
-///     embed_resource::compile("checksums.rc", None, None);
+///     // Compile and link checksums.rc
+///     embed_resource::compile("checksums.rc");
 /// }
 /// ```
-///
-/// If you want to link as `chksum-rc`:
-///
-/// ```rust,no-run
-/// extern crate embed_resource;
-///
-/// fn main() {
-///     // Compile file checksums.rc to be linkable as chksum-rc in $OUT_DIR
-///     embed_resource::compile("checksums.rc", Some("chksum-rc"), None);
-/// }
-/// ```
-pub fn compile(resource_file: &str, prefix: Option<&str>, out_dir: Option<&str>) {
+pub fn compile<T: AsRef<Path>>(resource_file: T) {
     if SUPPORTED {
-        let prefix = prefix.map_or_else(|| env::var("CARGO_PKG_NAME").unwrap() + "-manifest", str::to_string);
-        let out_dir = out_dir.map_or_else(|| env::var("OUT_DIR").unwrap(), str::to_string);
+        let resource_file = resource_file.as_ref();
+        let prefix = &resource_file.file_stem().unwrap().to_str().unwrap();
+        let out_dir = env::var("OUT_DIR").unwrap();
 
-        compile_resource(&out_dir, &prefix, resource_file);
+        compile_resource(&out_dir, &prefix, resource_file.to_str().unwrap());
         println!("cargo:rustc-link-search=native={}", out_dir);
+        println!("cargo:rustc-link-lib=dylib={}", prefix);
     }
 }
