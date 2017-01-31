@@ -9,7 +9,7 @@ categories = ["development-tools", "os::windows-apis"]
 license = "MIT"
 # Remember to also update in appveyor.yml
 # Remember to also update in src/lib.rs ~L60 (Cargo.toml example)
-version = "0.1.1"
+version = "1.0.1"
 authors = ["nabijaczleweli <nabijaczleweli@gmail.com>",
            "Cat Plus Plus <piotrlegnica@piotrl.pl>",
            "Liigo <liigo@qq.com>",

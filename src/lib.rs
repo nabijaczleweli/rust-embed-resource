@@ -59,7 +59,7 @@
 //! build = "build.rs"
 //!
 //! [build-dependencies]
-//! embed-resource = "0.1"
+//! embed-resource = "1.0"
 //! ```
 //!
 //! In `build.rs`:
