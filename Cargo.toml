@@ -13,7 +13,8 @@ version = "1.1.0"
 authors = ["nabijaczleweli <nabijaczleweli@gmail.com>",
            "Cat Plus Plus <piotrlegnica@piotrl.pl>",
            "Liigo <liigo@qq.com>",
-           "azyobuzin <azyobuzin@users.sourceforge.jp>"]
+           "azyobuzin <azyobuzin@users.sourceforge.jp>",
+           "Peter Atashian <retep998@gmail.com>"]
 exclude = ["*.enc"]
 
 
