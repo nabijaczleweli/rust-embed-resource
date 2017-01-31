@@ -47,7 +47,7 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-0' class='srclink' href='../src/embed_resource/src/lib.rs.html#1-191' title='goto source code'>[src]</a></span></h1>
+               </span><a id='src-0' class='srclink' href='../src/embed_resource/src/lib.rs.html#1-115' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'><p>A <a href="http://doc.crates.io/build-script.html"><code>Cargo</code> build script</a> library to handle compilation and inclusion of Windows
 resources in the most resilient fashion imaginable</p>
 
@@ -67,30 +67,8 @@ now standing at 100 lines and 3.2 kB.</p>
 and realising how error-prone that was, then being <a href="https://chat.stackoverflow.com/transcript/message/35378953#35378953">nudged by Shepmaster</a>
 to extract it to a crate, here we are.</p>
 
-<h1 id='usage-overview' class='section-header'><a href='#usage-overview'>Usage (overview)</a></h1>
-<p>Since the <a href="http://doc.crates.io/build-script.html">build script</a> documentation is trash and
-<a href="https://github.com/nabijaczleweli/cargo-update/commit/ef4346c#diff-639fbc4ef05b315af92b4d836c31b023">build script handling is even more trash</a>,
-we can&#39;t print a build script line to link to the compiled resource file. Instead, you need to use and <code>extern</code>
-block in your <code>main.rs</code> file like so:</p>
-
-<pre class='rust rust-example-rendered'>
-<span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>target_os</span><span class='op'>=</span><span class='string'>&quot;windows&quot;</span>)]</span>
-<span class='attribute'>#[<span class='ident'>link</span>(<span class='ident'>name</span><span class='op'>=</span><span class='string'>&quot;checksums-manifest&quot;</span>, <span class='ident'>kind</span><span class='op'>=</span><span class='string'>&quot;static&quot;</span>)]</span>
-<span class='kw'>extern</span> <span class='string'>&quot;C&quot;</span> {}
-
-<span class='comment'>// Your main() and w/e</span></pre>
-
-<p>Since the manifest is only generated on Windows, the <code>cfg</code> attribute takes care of that.</p>
-
-<p>The <code>name</code> attribute argument is either:</p>
-
-<ul>
-<li>The name of the crate + &quot;-manifest&quot; by default, or</li>
-<li>The second argument to <code>compile()</code>.</li>
-</ul>
-
-<h1 id='usage-detailed' class='section-header'><a href='#usage-detailed'>Usage (detailed)</a></h1>
-<p>For the purposes of the demonstration we will assume that the crate&#39;s name is &quot;checksums&quot; and that the resource file&#39;s name
+<h1 id='usage' class='section-header'><a href='#usage'>Usage</a></h1>
+<p>For the purposes of the demonstration we will assume that the resource file&#39;s name
 is &quot;checksums.rc&quot;.</p>
 
 <p>In <code>Cargo.toml</code>:</p>
@@ -108,46 +86,8 @@ embed-resource = &quot;1.0&quot;
 <span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>embed_resource</span>;
 
 <span class='kw'>fn</span> <span class='ident'>main</span>() {
-    <span class='ident'>embed_resource</span>::<span class='ident'>compile</span>(<span class='string'>&quot;checksums.rc&quot;</span>, <span class='prelude-val'>None</span>, <span class='prelude-val'>None</span>);
+    <span class='ident'>embed_resource</span>::<span class='ident'>compile</span>(<span class='string'>&quot;checksums.rc&quot;</span>);
 }</pre>
-
-<p>In <code>main.rs</code>:</p>
-
-<pre class='rust rust-example-rendered'>
-<span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>target_os</span><span class='op'>=</span><span class='string'>&quot;windows&quot;</span>)]</span>
-<span class='attribute'>#[<span class='ident'>link</span>(<span class='ident'>name</span><span class='op'>=</span><span class='string'>&quot;checksums-manifest&quot;</span>, <span class='ident'>kind</span><span class='op'>=</span><span class='string'>&quot;static&quot;</span>)]</span>
-<span class='kw'>extern</span> <span class='string'>&quot;C&quot;</span> {}</pre>
-
-<p>If, however, you want to use a different manifest link name (here: &quot;chksum-rc&quot;):</p>
-
-<p>In <code>build.rs</code>:</p>
-
-<pre class='rust rust-example-rendered'>
-<span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>embed_resource</span>;
-
-<span class='kw'>fn</span> <span class='ident'>main</span>() {
-    <span class='ident'>embed_resource</span>::<span class='ident'>compile</span>(<span class='string'>&quot;checksums.rc&quot;</span>, <span class='prelude-val'>Some</span>(<span class='string'>&quot;chksum-rc&quot;</span>), <span class='prelude-val'>None</span>);
-}</pre>
-
-<p>In <code>main.rs</code>:</p>
-
-<pre class='rust rust-example-rendered'>
-<span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>target_os</span><span class='op'>=</span><span class='string'>&quot;windows&quot;</span>)]</span>
-<span class='attribute'>#[<span class='ident'>link</span>(<span class='ident'>name</span><span class='op'>=</span><span class='string'>&quot;chksum-rc&quot;</span>, <span class='ident'>kind</span><span class='op'>=</span><span class='string'>&quot;static&quot;</span>)]</span>
-<span class='kw'>extern</span> <span class='string'>&quot;C&quot;</span> {}</pre>
-
-<p>If, for an unfathomable reason, you want to create the resource archive in a different location:</p>
-
-<p>In <code>build.rs</code>:</p>
-
-<pre class='rust rust-example-rendered'>
-<span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>embed_resource</span>;
-
-<span class='kw'>fn</span> <span class='ident'>main</span>() {
-    <span class='ident'>embed_resource</span>::<span class='ident'>compile</span>(<span class='string'>&quot;checksums.rc&quot;</span>, <span class='prelude-val'>None</span>, <span class='prelude-val'>Some</span>(<span class='string'>&quot;C:/Rast/build-files-output&quot;</span>));
-}</pre>
-
-<p>I souldn&#39;t recommend this, but hey.</p>
 
 <h1 id='credit' class='section-header'><a href='#credit'>Credit</a></h1>
 <p>In chronological order:</p>
@@ -159,6 +99,8 @@ embed-resource = &quot;1.0&quot;
 <p><a href="https://github.com/TheCatPlusPlus">@TheCatPlusPlus</a> -- knowledge and providing first iteration of manifest-embedding code</p>
 
 <p><a href="https://github.com/azyobuzin">@azyobuzin</a> -- providing code for finding places where RC.EXE could hide</p>
+
+<p><a href="https://github.com/retep998">@retep998</a> -- fixing MSVC support</p>
 </div><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
 <table>
                        <tr class=' module-item'>
