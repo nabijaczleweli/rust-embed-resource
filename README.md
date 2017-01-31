@@ -6,7 +6,7 @@ in the most resilient fashion imaginable
 
 ## Quickstart
 
-In your build script the resource file is called `checksums.rc`:
+In your build script, assuming the resource file is called `checksums.rc`:
 
 ```rust
 extern crate embed_resource;
