@@ -13,47 +13,44 @@ enum Arch {
 }
 
 pub fn compile_resource(out_dir: &str, prefix: &str, resource: &str) {
-    let rc_path = find_windows_sdk_bin_dir().and_then(|mut x| {
-        x.push("rc.exe");
-        if x.exists() { Some(x) } else { None }
-    });
-
     // `.res`es are linkable under MSVC as well as normal libraries.
-    Command::new(rc_path.as_ref().map_or(Path::new("rc.exe"), Path::new))
+    Command::new(find_windows_sdk_rc_exe().as_ref().map_or(Path::new("rc.exe"), Path::new))
         .args(&["/fo", &format!("{}/{}.lib", out_dir, prefix), resource])
         .status()
         .expect("Are you sure you have RC.EXE in your $PATH?");
 }
 
-fn find_windows_sdk_bin_dir() -> Option<PathBuf> {
+fn find_windows_sdk_rc_exe() -> Option<PathBuf> {
     let arch = if env::var("TARGET").unwrap().starts_with("x86_64") {
         Arch::X64
     } else {
         Arch::X86
     };
 
-    find_windows_kits_bin_dir("KitsRoot10", arch)
-        .or_else(|| find_windows_kits_bin_dir("KitsRoot81", arch))
-        .or_else(|| find_windows_kits_bin_dir("KitsRoot", arch))
-        .or_else(|| find_latest_windows_sdk_bin_dir(arch))
+    find_windows_kits_rc_exe("KitsRoot10", arch)
+        .or_else(|| find_windows_kits_rc_exe("KitsRoot81", arch))
+        .or_else(|| find_windows_kits_rc_exe("KitsRoot", arch))
+        .or_else(|| find_latest_windows_sdk_rc_exe(arch))
 }
 
 // Windows 8 - 10
-fn find_windows_kits_bin_dir(key: &str, arch: Arch) -> Option<PathBuf> {
+fn find_windows_kits_rc_exe(key: &str, arch: Arch) -> Option<PathBuf> {
     winreg::RegKey::predef(HKEY_LOCAL_MACHINE)
         .open_subkey_with_flags(r"SOFTWARE\Microsoft\Windows Kits\Installed Roots", KEY_QUERY_VALUE)
         .and_then(|reg_key| reg_key.get_value::<String, _>(key))
         .ok()
         .and_then(|root_dir| try_bin_dir(root_dir, "bin/x86", "bin/x64", arch))
+        .and_then(try_rc_exe)
 }
 
 // Windows Vista - 7
-fn find_latest_windows_sdk_bin_dir(arch: Arch) -> Option<PathBuf> {
+fn find_latest_windows_sdk_rc_exe(arch: Arch) -> Option<PathBuf> {
     winreg::RegKey::predef(HKEY_LOCAL_MACHINE)
         .open_subkey_with_flags(r"SOFTWARE\Microsoft\Microsoft SDKs\Windows", KEY_QUERY_VALUE)
         .and_then(|reg_key| reg_key.get_value::<String, _>("CurrentInstallFolder"))
         .ok()
         .and_then(|root_dir| try_bin_dir(root_dir, "Bin", "Bin/x64", arch))
+        .and_then(try_rc_exe)
 }
 
 fn try_bin_dir(root_dir: String, x86_bin: &str, x64_bin: &str, arch: Arch) -> Option<PathBuf> {
@@ -63,4 +60,9 @@ fn try_bin_dir(root_dir: String, x86_bin: &str, x64_bin: &str, arch: Arch) -> Op
         Arch::X64 => p.push(x64_bin),
     }
     if p.is_dir() { Some(p) } else { None }
+}
+
+fn try_rc_exe(mut pb: PathBuf) -> Option<PathBuf> {
+    pb.push("rc.exe");
+    if pb.exists() { Some(pb) } else { None }
 }

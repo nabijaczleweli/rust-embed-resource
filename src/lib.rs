@@ -63,6 +63,7 @@
 //!
 //! [@retep998](https://github.com/retep998) -- fixing MSVC support
 
+
 #[cfg(all(windows, target_env = "msvc"))]
 extern crate winreg;
 
