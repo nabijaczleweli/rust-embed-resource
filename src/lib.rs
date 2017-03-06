@@ -64,21 +64,21 @@
 //! [@retep998](https://github.com/retep998) -- fixing MSVC support
 
 
-#[cfg(all(windows, target_env = "msvc"))]
+#[cfg(all(target_os = "windows", target_env = "msvc"))]
 extern crate winreg;
 
-#[cfg(not(windows))]
+#[cfg(not(target_os = "windows"))]
 mod non_windows;
-#[cfg(all(windows, target_env = "msvc"))]
+#[cfg(all(target_os = "windows", target_env = "msvc"))]
 mod windows_msvc;
-#[cfg(all(windows, not(target_env = "msvc")))]
+#[cfg(all(target_os = "windows", not(target_env = "msvc")))]
 mod windows_not_msvc;
 
-#[cfg(not(windows))]
+#[cfg(not(target_os = "windows"))]
 use self::non_windows::*;
-#[cfg(all(windows, target_env = "msvc"))]
+#[cfg(all(target_os = "windows", target_env = "msvc"))]
 use self::windows_msvc::*;
-#[cfg(all(windows, not(target_env = "msvc")))]
+#[cfg(all(target_os = "windows", not(target_env = "msvc")))]
 use self::windows_not_msvc::*;
 
 use std::env;
