@@ -41,7 +41,7 @@
 //!
 //! In `build.rs`:
 //!
-//! ```rust,no-run
+//! ```rust,no_run
 //! extern crate embed_resource;
 //!
 //! fn main() {
@@ -95,7 +95,7 @@ use std::path::Path;
 ///
 /// In your build script, assuming the crate's name is "checksums":
 ///
-/// ```rust,no-run
+/// ```rust,no_run
 /// extern crate embed_resource;
 ///
 /// fn main() {
