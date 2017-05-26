@@ -21,7 +21,7 @@ pub fn compile_resource(out_dir: &str, prefix: &str, resource: &str) {
 }
 
 fn find_windows_sdk_rc_exe() -> Option<PathBuf> {
-    let arch = if env::var("TARGET").unwrap().starts_with("x86_64") {
+    let arch = if env::var("TARGET").expect("No TARGET env var").starts_with("x86_64") {
         Arch::X64
     } else {
         Arch::X86
