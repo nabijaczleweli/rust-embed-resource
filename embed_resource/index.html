@@ -9,6 +9,7 @@
 
     <title>embed_resource - Rust</title>
 
+    <link rel="stylesheet" type="text/css" href="../normalize.css">
     <link rel="stylesheet" type="text/css" href="../rustdoc.css">
     <link rel="stylesheet" type="text/css" href="../main.css">
     
@@ -16,7 +17,7 @@
     
     
 </head>
-<body class="rustdoc">
+<body class="rustdoc mod">
     <!--[if lte IE 8]>
     <div class="warning">
         This old browser is unsupported and will most likely display funky
@@ -42,8 +43,8 @@
         </form>
     </nav>
 
-    <section id='main' class="content mod">
-<h1 class='fqn'><span class='in-band'>Crate <a class='mod' href=''>embed_resource</a></span><span class='out-of-band'><span id='render-detail'>
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Crate <a class="mod" href=''>embed_resource</a></span><span class='out-of-band'><span id='render-detail'>
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
@@ -82,11 +83,11 @@ embed-resource = &quot;1.1&quot;
 
 <p>In <code>build.rs</code>:</p>
 
-<pre class='rust rust-example-rendered'>
-<span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>embed_resource</span>;
+<pre class="rust rust-example-rendered">
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">embed_resource</span>;
 
-<span class='kw'>fn</span> <span class='ident'>main</span>() {
-    <span class='ident'>embed_resource</span>::<span class='ident'>compile</span>(<span class='string'>&quot;checksums.rc&quot;</span>);
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="ident">embed_resource</span>::<span class="ident">compile</span>(<span class="string">&quot;checksums.rc&quot;</span>);
 }</pre>
 
 <h1 id='credit' class='section-header'><a href='#credit'>Credit</a></h1>
@@ -104,8 +105,8 @@ embed-resource = &quot;1.1&quot;
 </div><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
 <table>
                        <tr class=' module-item'>
-                           <td><a class='fn' href='fn.compile.html'
-                                  title='embed_resource::compile'>compile</a></td>
+                           <td><a class="fn" href="fn.compile.html"
+                                  title='fn embed_resource::compile'>compile</a></td>
                            <td class='docblock-short'>
                                 <p>Compile the Windows resource file and update the cargo search path if we&#39;re on Windows.</p>
                            </td>

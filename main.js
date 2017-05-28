@@ -609,7 +609,7 @@
                               displayPath + '<span class="' + type + '">' +
                               name + '</span></a></td><td>' +
                               '<a href="' + href + '">' +
-                              '<span class="desc">' + item.desc +
+                              '<span class="desc">' + escape(item.desc) +
                               '&nbsp;</span></a></td></tr>';
                 });
             } else {
@@ -807,14 +807,6 @@
             search();
         }
 
-        function plainSummaryLine(markdown) {
-            markdown.replace(/\n/g, ' ')
-            .replace(/'/g, "\'")
-            .replace(/^#+? (.+?)/, "$1")
-            .replace(/\[(.*?)\]\(.*?\)/g, "$1")
-            .replace(/\[(.*?)\]\[.*?\]/g, "$1");
-        }
-
         index = buildIndex(rawSearchIndex);
         startSearch();
 
@@ -836,13 +828,10 @@
                 if (crates[i] === window.currentCrate) {
                     klass += ' current';
                 }
-                if (rawSearchIndex[crates[i]].items[0]) {
-                    var desc = rawSearchIndex[crates[i]].items[0][3];
-                    var link = $('<a>', {'href': '../' + crates[i] + '/index.html',
-                                         'title': plainSummaryLine(desc),
-                                         'class': klass}).text(crates[i]);
-                    ul.append($('<li>').append(link));
-                }
+                var link = $('<a>', {'href': '../' + crates[i] + '/index.html',
+                                     'title': rawSearchIndex[crates[i]].doc,
+                                     'class': klass}).text(crates[i]);
+                ul.append($('<li>').append(link));
             }
             sidebar.append(div);
         }
@@ -990,7 +979,7 @@
             .html("[<span class='inner'></span>]");
         toggle.children(".inner").text(labelForToggleButton(false));
 
-        $(".method").each(function() {
+        $(".method, .impl-items > .associatedconstant").each(function() {
             if ($(this).next().is(".docblock") ||
                 ($(this).next().is(".stability") && $(this).next().next().is(".docblock"))) {
                     $(this).children().last().after(toggle.clone());

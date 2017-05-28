@@ -9,6 +9,7 @@
 
     <title>embed_resource::compile - Rust</title>
 
+    <link rel="stylesheet" type="text/css" href="../normalize.css">
     <link rel="stylesheet" type="text/css" href="../rustdoc.css">
     <link rel="stylesheet" type="text/css" href="../main.css">
     
@@ -16,7 +17,7 @@
     
     
 </head>
-<body class="rustdoc">
+<body class="rustdoc fn">
     <!--[if lte IE 8]>
     <div class="warning">
         This old browser is unsupported and will most likely display funky
@@ -42,13 +43,13 @@
         </form>
     </nav>
 
-    <section id='main' class="content fn">
-<h1 class='fqn'><span class='in-band'>Function <a href='index.html'>embed_resource</a>::<wbr><a class='fn' href=''>compile</a></span><span class='out-of-band'><span id='render-detail'>
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Function <a href='index.html'>embed_resource</a>::<wbr><a class="fn" href=''>compile</a></span><span class='out-of-band'><span id='render-detail'>
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
                </span><a class='srclink' href='../src/embed_resource/lib.rs.html#106-116' title='goto source code'>[src]</a></span></h1>
-<pre class='rust fn'>pub fn compile&lt;T:&nbsp;<a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html' title='core::convert::AsRef'>AsRef</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.Path.html' title='std::path::Path'>Path</a>&gt;&gt;(resource_file: T)</pre><div class='docblock'><p>Compile the Windows resource file and update the cargo search path if we&#39;re on Windows.</p>
+<pre class='rust fn'>pub fn compile&lt;T:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html" title="trait core::convert::AsRef">AsRef</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/std/path/struct.Path.html" title="struct std::path::Path">Path</a>&gt;&gt;(resource_file: T)</pre><div class='docblock'><p>Compile the Windows resource file and update the cargo search path if we&#39;re on Windows.</p>
 
 <p>On non-Windows this does nothing, on non-MSVC Windows, this chains <code>windres</code> with <code>ar</code>,
 but on MSVC Windows, this will try its hardest to find <code>RC.EXE</code> in Windows Kits and/or SDK directories
@@ -57,12 +58,12 @@ but on MSVC Windows, this will try its hardest to find <code>RC.EXE</code> in Wi
 <h1 id='examples' class='section-header'><a href='#examples'>Examples</a></h1>
 <p>In your build script, assuming the crate&#39;s name is &quot;checksums&quot;:</p>
 
-<pre class='rust rust-example-rendered'>
-<span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>embed_resource</span>;
+<pre class="rust rust-example-rendered">
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">embed_resource</span>;
 
-<span class='kw'>fn</span> <span class='ident'>main</span>() {
-    <span class='comment'>// Compile and link checksums.rc</span>
-    <span class='ident'>embed_resource</span>::<span class='ident'>compile</span>(<span class='string'>&quot;checksums.rc&quot;</span>);
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="comment">// Compile and link checksums.rc</span>
+    <span class="ident">embed_resource</span>::<span class="ident">compile</span>(<span class="string">&quot;checksums.rc&quot;</span>);
 }</pre>
 </div></section>
     <section id='search' class="content hidden"></section>
