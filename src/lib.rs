@@ -75,11 +75,11 @@ mod windows_msvc;
 mod windows_not_msvc;
 
 #[cfg(not(target_os = "windows"))]
-use self::non_windows::*;
+use self::non_windows::ResourceCompiler;
 #[cfg(all(target_os = "windows", target_env = "msvc"))]
-use self::windows_msvc::*;
+use self::windows_msvc::ResourceCompiler;
 #[cfg(all(target_os = "windows", not(target_env = "msvc")))]
-use self::windows_not_msvc::*;
+use self::windows_not_msvc::ResourceCompiler;
 
 use std::env;
 use std::path::Path;
@@ -104,13 +104,18 @@ use std::path::Path;
 /// }
 /// ```
 pub fn compile<T: AsRef<Path>>(resource_file: T) {
-    if SUPPORTED {
+    if let Some(res_compiler) = ResourceCompiler::new() {
         let resource_file = resource_file.as_ref();
-        let prefix = &resource_file.file_stem().expect("resource_file has no stem").to_str().expect("resource_file's stem not UTF-8");
+        let prefix = &resource_file.file_stem().expect("resource_file has no stem")
+                                   .to_str().expect("resource_file's stem not UTF-8");
         let out_dir = env::var("OUT_DIR").expect("No OUT_DIR env var");
 
-        compile_resource(&out_dir, &prefix, resource_file.to_str().expect("resource_file not UTF-8"));
+        res_compiler.compile_resource(&out_dir,
+                                      &prefix,
+                                      resource_file.to_str().expect("resource_file not UTF-8"));
         println!("cargo:rustc-link-search=native={}", out_dir);
         println!("cargo:rustc-link-lib=dylib={}", prefix);
+    } else {
+        println!("warning=The target platform does not support resource embedding");
     }
 }

@@ -4,20 +4,26 @@ use winreg::enums::*;
 use std::env;
 use winreg;
 
-pub const SUPPORTED: bool = true;
+pub struct ResourceCompiler;
+
+impl ResourceCompiler {
+    pub fn new() -> Option<Self> {
+        Some(ResourceCompiler { })
+    }
+
+    pub fn compile_resource(&self, out_dir: &str, prefix: &str, resource: &str) {
+        // `.res`es are linkable under MSVC as well as normal libraries.
+        Command::new(find_windows_sdk_rc_exe().as_ref().map_or(Path::new("rc.exe"), Path::new))
+            .args(&["/fo", &format!("{}/{}.lib", out_dir, prefix), resource])
+            .status()
+            .expect("Are you sure you have RC.EXE in your $PATH?");
+    }
+}
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum Arch {
     X86,
     X64,
-}
-
-pub fn compile_resource(out_dir: &str, prefix: &str, resource: &str) {
-    // `.res`es are linkable under MSVC as well as normal libraries.
-    Command::new(find_windows_sdk_rc_exe().as_ref().map_or(Path::new("rc.exe"), Path::new))
-        .args(&["/fo", &format!("{}/{}.lib", out_dir, prefix), resource])
-        .status()
-        .expect("Are you sure you have RC.EXE in your $PATH?");
 }
 
 fn find_windows_sdk_rc_exe() -> Option<PathBuf> {
