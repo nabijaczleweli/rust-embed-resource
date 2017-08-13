@@ -24,10 +24,13 @@ enum Arch {
 
 pub fn compile_resource(out_dir: &str, prefix: &str, resource: &str) {
     // `.res`es are linkable under MSVC as well as normal libraries.
-    Command::new(find_windows_sdk_rc_exe().as_ref().map_or(Path::new("rc.exe"), Path::new))
+    if !Command::new(find_windows_sdk_rc_exe().as_ref().map_or(Path::new("rc.exe"), Path::new))
         .args(&["/fo", &format!("{}/{}.lib", out_dir, prefix), resource])
         .status()
-        .expect("Are you sure you have RC.EXE in your $PATH?");
+        .expect("Are you sure you have RC.EXE in your $PATH?")
+        .success() {
+        panic!("RC.EXE failed to compile specified resource file");
+    }
 }
 
 fn find_windows_sdk_rc_exe() -> Option<PathBuf> {
