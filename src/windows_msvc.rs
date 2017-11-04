@@ -4,16 +4,6 @@ use winreg::enums::*;
 use std::{env, fs};
 use winreg;
 
-macro_rules! try_opt {
-    ($opt:expr) => {
-        if let Some(o) = $opt {
-            o
-        } else {
-            return None;
-        }
-    }
-}
-
 pub const SUPPORTED: bool = true;
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -69,12 +59,12 @@ fn find_latest_windows_sdk_rc_exe(arch: Arch) -> Option<PathBuf> {
 
 // Windows 10 with subdir support
 fn find_windows_10_kits_rc_exe(key: &str, arch: Arch) -> Option<PathBuf> {
-    let root_dir = try_opt!(winreg::RegKey::predef(HKEY_LOCAL_MACHINE)
+    let root_dir = (winreg::RegKey::predef(HKEY_LOCAL_MACHINE)
         .open_subkey_with_flags(r"SOFTWARE\Microsoft\Windows Kits\Installed Roots", KEY_QUERY_VALUE)
         .and_then(|reg_key| reg_key.get_value::<String, _>(key))
-        .ok()) + "/bin";
+        .ok())? + "/bin";
 
-    for entry in try_opt!(fs::read_dir(&root_dir).ok()).filter(|d| d.is_ok()).map(Result::unwrap) {
+    for entry in fs::read_dir(&root_dir).ok()?.filter(|d| d.is_ok()).map(Result::unwrap) {
         let fname = entry.file_name().into_string();
         let ftype = entry.file_type();
         if fname.is_err() || ftype.is_err() || ftype.unwrap().is_file() {
