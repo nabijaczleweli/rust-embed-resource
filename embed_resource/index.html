@@ -10,8 +10,11 @@
     <title>embed_resource - Rust</title>
 
     <link rel="stylesheet" type="text/css" href="../normalize.css">
-    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
-    <link rel="stylesheet" type="text/css" href="../main.css">
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle">
+    
+    <link rel="stylesheet" type="text/css" href="../dark.css">
+    <link rel="stylesheet" type="text/css" href="../main.css" id="themeStyle">
+    <script src="../storage.js"></script>
     
 
     
@@ -28,10 +31,18 @@
     
 
     <nav class="sidebar">
+        <div class="sidebar-menu">&#9776;</div>
         
-        <p class='location'>Crate embed_resource</p><div class="block items"><ul><li><a href="#functions">Functions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'embed_resource', ty: 'mod', relpath: '../'};</script>
+        <p class='location'>Crate embed_resource</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#functions">Functions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'embed_resource', ty: 'mod', relpath: '../'};</script></div>
     </nav>
 
+    <div class="theme-picker">
+        <button id="theme-picker" aria-label="Pick another theme!">
+            <img src="../brush.svg" width="18" alt="Pick another theme!">
+        </button>
+        <div id="theme-choices"></div>
+    </div>
+    <script src="../theme.js"></script>
     <nav class="sub">
         <form class="search-form js-only">
             <div class="search-container">
@@ -51,36 +62,34 @@
                </span><a class='srclink' href='../src/embed_resource/lib.rs.html#1-116' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'><p>A <a href="http://doc.crates.io/build-script.html"><code>Cargo</code> build script</a> library to handle compilation and inclusion of Windows
 resources in the most resilient fashion imaginable</p>
-
-<h1 id='background' class='section-header'><a href='#background'>Background</a></h1>
-<p>Including Windows resources seems very easy at first, despite the build scripts&#39; abhorrent documentation:
-<a href="https://github.com/nabijaczleweli/cargo-update/commit/ef4346c#diff-a7b0a2dee0126cddf994326e705a91ea">compile with <code>windres</code>, then make linkable with <code>ar</code></a>.</p>
-
-<p>I was very happy with that solution until it was brought to my attention, that <a href="https://github.com/nabijaczleweli/cargo-update/commit/f57e9c3#diff-a7b0a2dee0126cddf994326e705a91ea">MSVC uses something different</a>,
+<h1 id="background" class="section-header"><a href="#background">Background</a></h1>
+<p>Including Windows resources seems very easy at first, despite the build scripts' abhorrent documentation:
+[compile with <code>windres</code>, then make linkable with <code>ar</code>]
+(https://github.com/nabijaczleweli/cargo-update/commit/ef4346c#diff-a7b0a2dee0126cddf994326e705a91ea).</p>
+<p>I was very happy with that solution until it was brought to my attention, that [MSVC uses something different]
+(https://github.com/nabijaczleweli/cargo-update/commit/f57e9c3#diff-a7b0a2dee0126cddf994326e705a91ea),
 and now either <code>windres</code>-<code>ar</code> combo or <code>RC.EXE</code> would be used, which was OK.</p>
-
-<p>Later it transpired, that <a href="https://github.com/nabijaczleweli/cargo-update/commit/39fa758#diff-a7b0a2dee0126cddf994326e705a91ea">MSVC is even more incompatible with everything else</a>
+<p>Later it transpired, that [MSVC is even more incompatible with everything else]
+(https://github.com/nabijaczleweli/cargo-update/commit/39fa758#diff-a7b0a2dee0126cddf994326e705a91ea)
 by way of not having <code>RC.EXE</code> in <code>$PATH</code> (because it would only be reasonable to do so),
-so another MSVC artisan made the script <a href="https://github.com/nabijaczleweli/cargo-update/pull/22">find the most likely places for <code>RC.EXE</code> to be</a>, and the script grew yet again,
+so another MSVC artisan made the script [find the most likely places for <code>RC.EXE</code> to be]
+(https://github.com/nabijaczleweli/cargo-update/pull/22), and the script grew yet again,
 now standing at 100 lines and 3.2 kB.</p>
-
-<p>After <a href="https://github.com/thecoshman/http/commit/98205a4#diff-a7b0a2dee0126cddf994326e705a91ea">copying the build script in its entirety</a>
-and realising how error-prone that was, then being <a href="https://chat.stackoverflow.com/transcript/message/35378953#35378953">nudged by Shepmaster</a>
+<p>After [copying the build script in its entirety]
+(https://github.com/thecoshman/http/commit/98205a4#diff-a7b0a2dee0126cddf994326e705a91ea)
+and realising how error-prone that was, then being [nudged by Shepmaster]
+(https://chat.stackoverflow.com/transcript/message/35378953#35378953)
 to extract it to a crate, here we are.</p>
-
-<h1 id='usage' class='section-header'><a href='#usage'>Usage</a></h1>
-<p>For the purposes of the demonstration we will assume that the resource file&#39;s name
+<h1 id="usage" class="section-header"><a href="#usage">Usage</a></h1>
+<p>For the purposes of the demonstration we will assume that the resource file's name
 is &quot;checksums.rc&quot;.</p>
-
 <p>In <code>Cargo.toml</code>:</p>
-
 <pre><code class="language-toml"># The general section with crate name, license, etc.
 build = &quot;build.rs&quot;
 
 [build-dependencies]
 embed-resource = &quot;1.1&quot;
 </code></pre>
-
 <p>In <code>build.rs</code>:</p>
 
 <pre class="rust rust-example-rendered">
@@ -89,18 +98,12 @@ embed-resource = &quot;1.1&quot;
 <span class="kw">fn</span> <span class="ident">main</span>() {
     <span class="ident">embed_resource</span>::<span class="ident">compile</span>(<span class="string">&quot;checksums.rc&quot;</span>);
 }</pre>
-
-<h1 id='credit' class='section-header'><a href='#credit'>Credit</a></h1>
+<h1 id="credit" class="section-header"><a href="#credit">Credit</a></h1>
 <p>In chronological order:</p>
-
 <p><a href="https://github.com/liigo">@liigo</a> -- persistency in pestering me and investigating problems where I have failed</p>
-
 <p><a href="https://github.com/mzji">@mzji</a> -- MSVC lab rat</p>
-
 <p><a href="https://github.com/TheCatPlusPlus">@TheCatPlusPlus</a> -- knowledge and providing first iteration of manifest-embedding code</p>
-
 <p><a href="https://github.com/azyobuzin">@azyobuzin</a> -- providing code for finding places where RC.EXE could hide</p>
-
 <p><a href="https://github.com/retep998">@retep998</a> -- fixing MSVC support</p>
 </div><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
 <table>
@@ -108,7 +111,8 @@ embed-resource = &quot;1.1&quot;
                            <td><a class="fn" href="fn.compile.html"
                                   title='fn embed_resource::compile'>compile</a></td>
                            <td class='docblock-short'>
-                                <p>Compile the Windows resource file and update the cargo search path if we&#39;re on Windows.</p>
+                                <p>Compile the Windows resource file and update the cargo search path if we're on Windows.</p>
+
                            </td>
                        </tr></table></section>
     <section id='search' class="content hidden"></section>
@@ -123,18 +127,22 @@ embed-resource = &quot;1.1&quot;
                 <h2>Keyboard Shortcuts</h2>
 
                 <dl>
-                    <dt>?</dt>
+                    <dt><kbd>?</kbd></dt>
                     <dd>Show this help dialog</dd>
-                    <dt>S</dt>
+                    <dt><kbd>S</kbd></dt>
                     <dd>Focus the search field</dd>
-                    <dt>&larrb;</dt>
+                    <dt><kbd>↑</kbd></dt>
                     <dd>Move up in search results</dd>
-                    <dt>&rarrb;</dt>
+                    <dt><kbd>↓</kbd></dt>
                     <dd>Move down in search results</dd>
-                    <dt>&#9166;</dt>
+                    <dt><kbd>↹</kbd></dt>
+                    <dd>Switch tab</dd>
+                    <dt><kbd>&#9166;</kbd></dt>
                     <dd>Go to active search result</dd>
-                    <dt>+</dt>
-                    <dd>Collapse/expand all sections</dd>
+                    <dt><kbd>+</kbd></dt>
+                    <dd>Expand all sections</dd>
+                    <dt><kbd>-</kbd></dt>
+                    <dd>Collapse all sections</dd>
                 </dl>
             </div>
 
