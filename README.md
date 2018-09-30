@@ -2,7 +2,7 @@
 A [`Cargo` build script](https://doc.rust-lang.org/cargo/reference/build-scripts.html) library to handle compilation and inclusion of Windows resources
 in the most resilient fashion imaginable
 
-## [Documentation](https://cdn.rawgit.com/nabijaczleweli/rust-embed-resource/doc/embed_resource/index.html)
+## [Documentation](https://rawcdn.githack.com/nabijaczleweli/rust-embed-resource/doc/embed_resource/index.html)
 
 ## Quickstart
 
