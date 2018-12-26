@@ -65,6 +65,8 @@
 
 
 #[cfg(all(target_os = "windows", target_env = "msvc"))]
+extern crate vswhom;
+#[cfg(all(target_os = "windows", target_env = "msvc"))]
 extern crate winreg;
 
 #[cfg(not(target_os = "windows"))]

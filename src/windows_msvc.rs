@@ -1,5 +1,6 @@
 use std::path::{PathBuf, Path};
 use std::process::Command;
+use vswhom::VsFindResult;
 use winreg::enums::*;
 use std::{env, fs};
 use winreg;
@@ -35,6 +36,22 @@ fn find_windows_sdk_rc_exe() -> Option<PathBuf> {
         .or_else(|| find_windows_kits_rc_exe("KitsRoot", arch))
         .or_else(|| find_latest_windows_sdk_rc_exe(arch))
         .or_else(|| find_windows_10_kits_rc_exe("KitsRoot10", arch))
+        .or_else(|| find_with_vswhom(arch))
+}
+
+fn find_with_vswhom(arch: Arch) -> Option<PathBuf> {
+    VsFindResult::search()
+        .and_then(|res| res.windows_sdk_root)
+        .map(PathBuf::from)
+        .and_then(|mut root| {
+            let ver = root.file_name().expect("malformed vswhom-returned SDK root").to_os_string();
+            root.pop();
+            root.pop();
+            root.push("bin");
+            root.push(ver);
+            try_bin_dir(root, "x86", "x64", arch)
+        })
+        .and_then(try_rc_exe)
 }
 
 // Windows 8 - 10
@@ -80,13 +97,21 @@ fn find_windows_10_kits_rc_exe(key: &str, arch: Arch) -> Option<PathBuf> {
     None
 }
 
-fn try_bin_dir(root_dir: String, x86_bin: &str, x64_bin: &str, arch: Arch) -> Option<PathBuf> {
-    let mut p = PathBuf::from(root_dir);
+fn try_bin_dir<R: Into<PathBuf>>(root_dir: R, x86_bin: &str, x64_bin: &str, arch: Arch) -> Option<PathBuf> {
+    try_bin_dir_impl(root_dir.into(), x86_bin, x64_bin, arch)
+}
+
+fn try_bin_dir_impl(mut root_dir: PathBuf, x86_bin: &str, x64_bin: &str, arch: Arch) -> Option<PathBuf> {
     match arch {
-        Arch::X86 => p.push(x86_bin),
-        Arch::X64 => p.push(x64_bin),
+        Arch::X86 => root_dir.push(x86_bin),
+        Arch::X64 => root_dir.push(x64_bin),
     }
-    if p.is_dir() { Some(p) } else { None }
+
+    if root_dir.is_dir() {
+        Some(root_dir)
+    } else {
+        None
+    }
 }
 
 fn try_rc_exe(mut pb: PathBuf) -> Option<PathBuf> {

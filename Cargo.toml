@@ -18,6 +18,9 @@ authors = ["nabijaczleweli <nabijaczleweli@gmail.com>",
 exclude = ["*.enc"]
 
 
+[target.'cfg(all(target_os = "windows", target_env = "msvc"))'.dependencies]
+vswhom = "0.1.0"
+
 [target.'cfg(all(target_os = "windows", target_env = "msvc"))'.dependencies.winreg]
 version = "0.5"
 default-features = false
