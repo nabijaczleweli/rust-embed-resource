@@ -7,6 +7,7 @@
 !Cargo.toml
 !rustfmt.toml
 !build.rs
+!empty-resource.rc
 !*.sublime-project
 !*.md
 !src

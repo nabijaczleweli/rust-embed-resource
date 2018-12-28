@@ -3,7 +3,7 @@
 	[
 		{
 			"working_dir": "$project_path",
-			"shell_cmd": "cargo build --color always && cargo test --color always",
+			"shell_cmd": "cargo build --color always && cargo test --color always && cargo run --color always -- empty-resource.rc",
 			"name": "Build rust-embed-resource",
 
 			"target": "ansi_color_build",
