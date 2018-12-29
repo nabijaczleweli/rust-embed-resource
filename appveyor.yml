@@ -19,8 +19,14 @@ install:
   - curl -SL https://win.rustup.rs/ -oC:\rustup-init.exe
   - C:\rustup-init.exe -y --default-host="%TARGET%"
 
+build: off
 build_script:
   - cargo build --verbose --release
+
+test: off
+test_script:
+  - cargo test --verbose --release
+  - cargo run --verbose --release -- empty-resource.rc
 
 notifications:
   - provider: Email
