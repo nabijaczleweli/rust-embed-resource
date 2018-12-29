@@ -40,8 +40,9 @@ fn find_windows_sdk_rc_exe() -> Option<PathBuf> {
 }
 
 fn find_with_vswhom(arch: Arch) -> Option<PathBuf> {
-    VsFindResult::search()
-        .and_then(|res| res.windows_sdk_root)
+    let res = VsFindResult::search();
+    res.as_ref()
+        .and_then(|res| res.windows_sdk_root.as_ref())
         .map(PathBuf::from)
         .and_then(|mut root| {
             let ver = root.file_name().expect("malformed vswhom-returned SDK root").to_os_string();
@@ -52,6 +53,16 @@ fn find_with_vswhom(arch: Arch) -> Option<PathBuf> {
             try_bin_dir(root, "x86", "x64", arch)
         })
         .and_then(try_rc_exe)
+        .or_else(move || {
+            res.and_then(|res| res.windows_sdk_root)
+                .map(PathBuf::from)
+                .and_then(|mut root| {
+                    root.pop();
+                    root.pop();
+                    try_bin_dir(root, "bin/x86", "bin/x64", arch)
+                })
+                .and_then(try_rc_exe)
+        })
 }
 
 // Windows 8 - 10
