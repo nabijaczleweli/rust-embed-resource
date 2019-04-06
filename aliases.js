@@ -1,2 +1,2 @@
 var ALIASES = {};
-ALIASES['embed_resource'] = {};
+ALIASES["embed_resource"] = {};
