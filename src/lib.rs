@@ -4,24 +4,24 @@
 //! # Background
 //!
 //! Including Windows resources seems very easy at first, despite the build scripts' abhorrent documentation:
-//! [compile with `windres`, then make linkable with `ar`]
-//! (https://github.com/nabijaczleweli/cargo-update/commit/ef4346c#diff-a7b0a2dee0126cddf994326e705a91ea).
+//! [compile with `windres`, then make linkable with
+//! `ar`](https://github.com/nabijaczleweli/cargo-update/commit/ef4346c#diff-a7b0a2dee0126cddf994326e705a91ea).
 //!
-//! I was very happy with that solution until it was brought to my attention, that [MSVC uses something different]
-//! (https://github.com/nabijaczleweli/cargo-update/commit/f57e9c3#diff-a7b0a2dee0126cddf994326e705a91ea),
+//! I was very happy with that solution until it was brought to my attention, that [MSVC uses something
+//! different](https://github.com/nabijaczleweli/cargo-update/commit/f57e9c3#diff-a7b0a2dee0126cddf994326e705a91ea),
 //! and now either `windres`-`ar` combo or `RC.EXE` would be used, which was OK.
 //!
-//! Later it transpired, that [MSVC is even more incompatible with everything else]
-//! (https://github.com/nabijaczleweli/cargo-update/commit/39fa758#diff-a7b0a2dee0126cddf994326e705a91ea)
+//! Later it transpired, that [MSVC is even more incompatible with everything
+//! else](https://github.com/nabijaczleweli/cargo-update/commit/39fa758#diff-a7b0a2dee0126cddf994326e705a91ea)
 //! by way of not having `RC.EXE` in `$PATH` (because it would only be reasonable to do so),
-//! so another MSVC artisan made the script [find the most likely places for `RC.EXE` to be]
-//! (https://github.com/nabijaczleweli/cargo-update/pull/22), and the script grew yet again,
+//! so another MSVC artisan made the script [find the most likely places for `RC.EXE` to
+//! be](https://github.com/nabijaczleweli/cargo-update/pull/22), and the script grew yet again,
 //! now standing at 100 lines and 3.2 kB.
 //!
-//! After [copying the build script in its entirety]
-//! (https://github.com/thecoshman/http/commit/98205a4#diff-a7b0a2dee0126cddf994326e705a91ea)
-//! and realising how error-prone that was, then being [nudged by Shepmaster]
-//! (https://chat.stackoverflow.com/transcript/message/35378953#35378953)
+//! After [copying the build script in its
+//! entirety](https://github.com/thecoshman/http/commit/98205a4#diff-a7b0a2dee0126cddf994326e705a91ea)
+//! and realising how error-prone that was, then being [nudged by
+//! Shepmaster](https://chat.stackoverflow.com/transcript/message/35378953#35378953)
 //! to extract it to a crate, here we are.
 //!
 //! # Usage
