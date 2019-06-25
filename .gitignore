@@ -10,5 +10,7 @@
 !empty-resource.rc
 !*.sublime-project
 !*.md
+!.github
+!.github/**
 !src
 !src/**

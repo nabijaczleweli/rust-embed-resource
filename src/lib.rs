@@ -62,6 +62,12 @@
 //! [@azyobuzin](https://github.com/azyobuzin) -- providing code for finding places where RC.EXE could hide
 //!
 //! [@retep998](https://github.com/retep998) -- fixing MSVC support
+//!
+//! # Special thanks
+//!
+//! To all who support further development on [Patreon](https://patreon.com/nabijaczleweli), in particular:
+//!
+//!   * ThePhD
 
 
 #[cfg(all(target_os = "windows", target_env = "msvc"))]

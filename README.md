@@ -30,3 +30,9 @@ In chronological order:
 [@azyobuzin](https://github.com/azyobuzin) -- providing code for finding places where RC.EXE could hide
 
 [@retep998](https://github.com/retep998) -- fixing MSVC support
+
+## Special thanks
+
+To all who support further development on Patreon, in particular:
+
+  * ThePhD
