@@ -2,21 +2,21 @@
 resources in the most resilient fashion imaginable</p>
 <h1 id="background" class="section-header"><a href="#background">Background</a></h1>
 <p>Including Windows resources seems very easy at first, despite the build scripts' abhorrent documentation:
-[compile with <code>windres</code>, then make linkable with <code>ar</code>]
-(https://github.com/nabijaczleweli/cargo-update/commit/ef4346c#diff-a7b0a2dee0126cddf994326e705a91ea).</p>
-<p>I was very happy with that solution until it was brought to my attention, that [MSVC uses something different]
-(https://github.com/nabijaczleweli/cargo-update/commit/f57e9c3#diff-a7b0a2dee0126cddf994326e705a91ea),
+<a href="https://github.com/nabijaczleweli/cargo-update/commit/ef4346c#diff-a7b0a2dee0126cddf994326e705a91ea">compile with <code>windres</code>, then make linkable with
+<code>ar</code></a>.</p>
+<p>I was very happy with that solution until it was brought to my attention, that <a href="https://github.com/nabijaczleweli/cargo-update/commit/f57e9c3#diff-a7b0a2dee0126cddf994326e705a91ea">MSVC uses something
+different</a>,
 and now either <code>windres</code>-<code>ar</code> combo or <code>RC.EXE</code> would be used, which was OK.</p>
-<p>Later it transpired, that [MSVC is even more incompatible with everything else]
-(https://github.com/nabijaczleweli/cargo-update/commit/39fa758#diff-a7b0a2dee0126cddf994326e705a91ea)
+<p>Later it transpired, that <a href="https://github.com/nabijaczleweli/cargo-update/commit/39fa758#diff-a7b0a2dee0126cddf994326e705a91ea">MSVC is even more incompatible with everything
+else</a>
 by way of not having <code>RC.EXE</code> in <code>$PATH</code> (because it would only be reasonable to do so),
-so another MSVC artisan made the script [find the most likely places for <code>RC.EXE</code> to be]
-(https://github.com/nabijaczleweli/cargo-update/pull/22), and the script grew yet again,
+so another MSVC artisan made the script <a href="https://github.com/nabijaczleweli/cargo-update/pull/22">find the most likely places for <code>RC.EXE</code> to
+be</a>, and the script grew yet again,
 now standing at 100 lines and 3.2 kB.</p>
-<p>After [copying the build script in its entirety]
-(https://github.com/thecoshman/http/commit/98205a4#diff-a7b0a2dee0126cddf994326e705a91ea)
-and realising how error-prone that was, then being [nudged by Shepmaster]
-(https://chat.stackoverflow.com/transcript/message/35378953#35378953)
+<p>After <a href="https://github.com/thecoshman/http/commit/98205a4#diff-a7b0a2dee0126cddf994326e705a91ea">copying the build script in its
+entirety</a>
+and realising how error-prone that was, then being <a href="https://chat.stackoverflow.com/transcript/message/35378953#35378953">nudged by
+Shepmaster</a>
 to extract it to a crate, here we are.</p>
 <h1 id="usage" class="section-header"><a href="#usage">Usage</a></h1>
 <p>For the purposes of the demonstration we will assume that the resource file's name
