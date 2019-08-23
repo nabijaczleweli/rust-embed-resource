@@ -112,7 +112,8 @@ use std::path::Path;
 /// }
 /// ```
 pub fn compile<T: AsRef<Path>>(resource_file: T) {
-    if SUPPORTED {
+  if let Ok(target) = std::env::var("TARGET") {
+    if SUPPORTED && target.contains("windows") {
         let resource_file = resource_file.as_ref();
         let prefix = &resource_file.file_stem().expect("resource_file has no stem").to_str().expect("resource_file's stem not UTF-8");
         let out_dir = env::var("OUT_DIR").expect("No OUT_DIR env var");
@@ -121,4 +122,5 @@ pub fn compile<T: AsRef<Path>>(resource_file: T) {
         println!("cargo:rustc-link-search=native={}", out_dir);
         println!("cargo:rustc-link-lib=dylib={}", prefix);
     }
+  }
 }
