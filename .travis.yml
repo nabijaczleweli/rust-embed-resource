@@ -7,6 +7,12 @@ matrix:
     - env: LANGUAGE=Rust
       language: rust
       rust: stable
+    - env: LANGUAGE=Rust TARGET=x86_64-pc-windows-gnu
+      language: rust
+      rust: stable
+    - env: LANGUAGE=Rust TARGET=i686-pc-windows-gnu
+      language: rust
+      rust: stable
     - env: LANGUAGE=Rust
       language: rust
       rust: beta
@@ -33,6 +39,7 @@ install:
 script:
   - if [ "$LANGUAGE" == "Rust" ]; then cargo build --verbose; fi
   - if [ "$LANGUAGE" == "Rust" ]; then cargo test  --verbose; fi
+  - if [ "$LANGUAGE" == "Rust" ]; then cargo run   --verbose -- empty-resource.rc; fi
   - if [ "$LANGUAGE" == "Rust" ] && [ "$CLIPPY" ] && [ "$CLIPPY_INSTALLED" == 1 ]; then cargo clippy; fi
   - if [ "$LANGUAGE" == "Rust" ] && [ "$DEPLOY" ] && [ "$TRAVIS_TAG" ] && [ "$TRAVIS_SECURE_ENV_VARS" == "true" ]; then cargo build --verbose --release; fi
 
