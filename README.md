@@ -31,6 +31,8 @@ In chronological order:
 
 [@retep998](https://github.com/retep998) -- fixing MSVC support
 
+[@SonnyX](https://github.com/SonnyX) -- Windows cross-compilation support and testing
+
 ## Special thanks
 
 To all who support further development on Patreon, in particular:

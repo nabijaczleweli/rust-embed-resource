@@ -63,6 +63,8 @@
 //!
 //! [@retep998](https://github.com/retep998) -- fixing MSVC support
 //!
+//! [@SonnyX](https://github.com/SonnyX) -- Windows cross-compilation support and testing
+//!
 //! # Special thanks
 //!
 //! To all who support further development on [Patreon](https://patreon.com/nabijaczleweli), in particular:
@@ -95,9 +97,10 @@ use std::path::Path;
 
 /// Compile the Windows resource file and update the cargo search path if we're on Windows.
 ///
-/// On non-Windows this does nothing, on non-MSVC Windows, this chains `windres` with `ar`,
-/// but on MSVC Windows, this will try its hardest to find `RC.EXE` in Windows Kits and/or SDK directories
-/// (because rustc supports VC++ without being in a VC++ dev environment, so we have to as well).
+/// On non-Windows non-Windows-cross-compile-target this does nothing, on non-MSVC Windows and Windows cross-compile targets,
+/// this chains `windres` with `ar`,
+/// but on MSVC Windows, this will try its hardest to find `RC.EXE` in Windows Kits and/or SDK directories,
+/// falling back to [Jon Blow's VS discovery script](https://pastebin.com/3YvWQa5c).
 ///
 /// # Examples
 ///
@@ -111,10 +114,14 @@ use std::path::Path;
 ///     embed_resource::compile("checksums.rc");
 /// }
 /// ```
+#[inline]
 pub fn compile<T: AsRef<Path>>(resource_file: T) {
+    compile_impl(resource_file.as_ref())
+}
+
+fn compile_impl(resource_file: &Path) {
     let comp = ResourceCompiler::new();
     if comp.is_supported() {
-        let resource_file = resource_file.as_ref();
         let prefix = &resource_file.file_stem().expect("resource_file has no stem").to_str().expect("resource_file's stem not UTF-8");
         let out_dir = env::var("OUT_DIR").expect("No OUT_DIR env var");
 
