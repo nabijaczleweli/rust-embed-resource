@@ -123,7 +123,6 @@
 <span id="123">123</span>
 <span id="124">124</span>
 <span id="125">125</span>
-<span id="126">126</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A [`Cargo` build script](http://doc.crates.io/build-script.html) library to handle compilation and inclusion of Windows</span>
 <span class="doccomment">//! resources in the most resilient fashion imaginable</span>
@@ -239,17 +238,16 @@
 <span class="doccomment">/// }</span>
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compile</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;&gt;</span>(<span class="ident">resource_file</span>: <span class="ident">T</span>) {
-  <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">target</span>) <span class="op">=</span> <span class="ident">std</span>::<span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;TARGET&quot;</span>) {
-    <span class="kw">if</span> <span class="ident">SUPPORTED</span> <span class="op">&amp;&amp;</span> <span class="ident">target</span>.<span class="ident">contains</span>(<span class="string">&quot;windows&quot;</span>) {
+    <span class="kw">let</span> <span class="ident">comp</span> <span class="op">=</span> <span class="ident">ResourceCompiler</span>::<span class="ident">new</span>();
+    <span class="kw">if</span> <span class="ident">comp</span>.<span class="ident">is_supported</span>() {
         <span class="kw">let</span> <span class="ident">resource_file</span> <span class="op">=</span> <span class="ident">resource_file</span>.<span class="ident">as_ref</span>();
         <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">resource_file</span>.<span class="ident">file_stem</span>().<span class="ident">expect</span>(<span class="string">&quot;resource_file has no stem&quot;</span>).<span class="ident">to_str</span>().<span class="ident">expect</span>(<span class="string">&quot;resource_file&#39;s stem not UTF-8&quot;</span>);
         <span class="kw">let</span> <span class="ident">out_dir</span> <span class="op">=</span> <span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;OUT_DIR&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;No OUT_DIR env var&quot;</span>);
 
-        <span class="ident">compile_resource</span>(<span class="kw-2">&amp;</span><span class="ident">out_dir</span>, <span class="kw-2">&amp;</span><span class="ident">prefix</span>, <span class="ident">resource_file</span>.<span class="ident">to_str</span>().<span class="ident">expect</span>(<span class="string">&quot;resource_file not UTF-8&quot;</span>));
+        <span class="ident">comp</span>.<span class="ident">compile_resource</span>(<span class="kw-2">&amp;</span><span class="ident">out_dir</span>, <span class="kw-2">&amp;</span><span class="ident">prefix</span>, <span class="ident">resource_file</span>.<span class="ident">to_str</span>().<span class="ident">expect</span>(<span class="string">&quot;resource_file not UTF-8&quot;</span>));
         <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;cargo:rustc-link-search=native={}&quot;</span>, <span class="ident">out_dir</span>);
         <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;cargo:rustc-link-lib=dylib={}&quot;</span>, <span class="ident">prefix</span>);
     }
-  }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g., <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g., <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g., <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../../";window.currentCrate = "embed_resource";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
