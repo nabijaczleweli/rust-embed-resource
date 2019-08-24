@@ -5,24 +5,40 @@ use winreg::enums::*;
 use std::{env, fs};
 use winreg;
 
-pub const SUPPORTED: bool = true;
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct ResourceCompiler;
+
+impl ResourceCompiler {
+    #[inline(always)]
+    pub fn new() -> ResourceCompiler {
+        ResourceCompiler
+    }
+
+    #[inline(always)]
+    pub fn is_supported(&self) -> bool {
+        true
+    }
+
+    pub fn compile_resource(&self, out_dir: &str, prefix: &str, resource: &str) {
+        // `.res`es are linkable under MSVC as well as normal libraries.
+        if !Command::new(find_windows_sdk_rc_exe().as_ref().map_or(Path::new("rc.exe"), Path::new))
+            .args(&["/fo", &format!("{}/{}.lib", out_dir, prefix), resource])
+            .status()
+            .expect("Are you sure you have RC.EXE in your $PATH?")
+            .success() {
+            panic!("RC.EXE failed to compile specified resource file");
+        }
+    }
+}
+
+
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 enum Arch {
     X86,
     X64,
 }
 
-pub fn compile_resource(out_dir: &str, prefix: &str, resource: &str) {
-    // `.res`es are linkable under MSVC as well as normal libraries.
-    if !Command::new(find_windows_sdk_rc_exe().as_ref().map_or(Path::new("rc.exe"), Path::new))
-        .args(&["/fo", &format!("{}/{}.lib", out_dir, prefix), resource])
-        .status()
-        .expect("Are you sure you have RC.EXE in your $PATH?")
-        .success() {
-        panic!("RC.EXE failed to compile specified resource file");
-    }
-}
 
 fn find_windows_sdk_rc_exe() -> Option<PathBuf> {
     let arch = if env::var("TARGET").expect("No TARGET env var").starts_with("x86_64") {
