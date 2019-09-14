@@ -9,7 +9,7 @@ categories = ["development-tools", "os::windows-apis"]
 license = "MIT"
 # Remember to also update in appveyor.yml
 # Remember to also update in src/lib.rs ~L40 (Cargo.toml example)
-version = "1.3.0"
+version = "1.3.1"
 authors = ["nabijaczleweli <nabijaczleweli@gmail.com>",
            "Cat Plus Plus <piotrlegnica@piotrl.pl>",
            "Liigo <liigo@qq.com>",
@@ -17,12 +17,13 @@ authors = ["nabijaczleweli <nabijaczleweli@gmail.com>",
            "Peter Atashian <retep998@gmail.com>",
            "pravic <ehysta@gmail.com>",
            "Gabriel Majeri <gabriel.majeri6@gmail.com>",
-           "SonnyX"]
+           "SonnyX",
+           "Johan Andersson <repi@repi.se>"]
 exclude = ["*.enc"]
 
 
 [target.'cfg(all(target_os = "windows", target_env = "msvc"))'.dependencies]
-vswhom = "0.1.0"
+vswhom = "0.1"
 
 [target.'cfg(all(target_os = "windows", target_env = "msvc"))'.dependencies.winreg]
 version = "0.6"
