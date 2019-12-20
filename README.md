@@ -18,32 +18,32 @@ fn main() {
 ```
 
 ## Example: Embedding a Windows Manifest
+Courtesy of [@jpoles1](https://github.com/jpoles1).
 
 The following steps are used to embed a manifest in your compiled rust .exe file. In this example the manifest will cause admin permissions to be requested for the final executable:
 
-1) Add the following to your cargo.toml:
-```
+1. Add the following to your cargo.toml:
+```toml
 [build-dependencies]
 embed-resource = "1.3"
 ```
 
-2) In your project root directory, add a file named `build.rs` with the following:
-```
+2. In your project root directory, add a file named `build.rs` with the following:
+```rust
 extern crate embed_resource;
 fn main() {
     embed_resource::compile("app-name-manifest.rc");
 }
 ```
 
-3) In your project root directory, add a file named `app-name-manifest.rc` with the following:
-```
+3. In your project root directory, add a file named `app-name-manifest.rc` with the following:
+```c
 #define RT_MANIFEST 24
 1 RT_MANIFEST "app-name.exe.manifest"
 ```
 
-4) In your project root directory, add a file named `app-name.exe.manifest` with the following:
-
-```
+4. In your project root directory, add a file named `app-name.exe.manifest` with the following:
+```xml
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
     <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
@@ -56,8 +56,7 @@ fn main() {
 </assembly>
 ```
 
-5) Build your project!
-
+5. Build your project!
 
 ## Credit
 
