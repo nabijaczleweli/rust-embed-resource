@@ -10,7 +10,7 @@ license = "MIT"
 # Remember to also update in appveyor.yml
 # Remember to also update in src/lib.rs ~L40 (Cargo.toml example)
 # Remember to also update in README
-version = "1.3.1"
+version = "1.3.2"
 authors = ["nabijaczleweli <nabijaczleweli@gmail.com>",
            "Cat Plus Plus <piotrlegnica@piotrl.pl>",
            "Liigo <liigo@qq.com>",
@@ -20,7 +20,8 @@ authors = ["nabijaczleweli <nabijaczleweli@gmail.com>",
            "Gabriel Majeri <gabriel.majeri6@gmail.com>",
            "SonnyX",
            "Johan Andersson <repi@repi.se>",
-           "Jordan Poles <jpdev.noreply@gmail.com>"]
+           "Jordan Poles <jpdev.noreply@gmail.com>",
+           "MSxDOS <melcodos@gmail.com>"]
 exclude = ["*.enc"]
 
 

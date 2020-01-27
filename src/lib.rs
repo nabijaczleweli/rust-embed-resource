@@ -65,6 +65,8 @@
 //!
 //! [@SonnyX](https://github.com/SonnyX) -- Windows cross-compilation support and testing
 //!
+//! [@MSxDOS](https://github.com/MSxDOS) -- finding and supplying RC.EXE its esoteric header include paths
+//!
 //! # Special thanks
 //!
 //! To all who support further development on [Patreon](https://patreon.com/nabijaczleweli), in particular:
@@ -100,7 +102,8 @@ use std::path::Path;
 /// On non-Windows non-Windows-cross-compile-target this does nothing, on non-MSVC Windows and Windows cross-compile targets,
 /// this chains `windres` with `ar`,
 /// but on MSVC Windows, this will try its hardest to find `RC.EXE` in Windows Kits and/or SDK directories,
-/// falling back to [Jon Blow's VS discovery script](https://pastebin.com/3YvWQa5c).
+/// falling back to [Jon Blow's VS discovery script](https://pastebin.com/3YvWQa5c),
+/// and on Windows 10 `%INCLUDE%` will be updated to help `RC.EXE` find `windows.h` and friends.
 ///
 /// # Examples
 ///
