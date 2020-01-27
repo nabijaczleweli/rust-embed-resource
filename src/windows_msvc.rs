@@ -1,6 +1,7 @@
+use std::sync::atomic::Ordering::SeqCst;
+use std::sync::atomic::AtomicBool;
 use std::path::{PathBuf, Path};
 use std::process::Command;
-use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
 use vswhom::VsFindResult;
 use winreg::enums::*;
 use std::{env, fs};
@@ -127,35 +128,40 @@ fn find_windows_10_kits_rc_exe(key: &str, arch: Arch) -> Option<PathBuf> {
     None
 }
 
+/// Update %INCLUDE% to contain all \Include\<version>\ folders before invoking rc.exe
+/// (https://github.com/nabijaczleweli/rust-embed-resource/pull/17),
+/// fixing "Unable to find windows.h" errors (https://github.com/nabijaczleweli/rust-embed-resource/issues/11)
 fn include_windows_10_kits(kit_root: &str) {
     static IS_INCLUDED: AtomicBool = AtomicBool::new(false);
 
     if !IS_INCLUDED.swap(true, SeqCst) {
-        include_impl(kit_root);
+        include_windows_10_kits_impl(kit_root);
     }
 }
 
-fn include_impl(kit_root: &str) {
+fn include_windows_10_kits_impl(kit_root: &str) {
     const VAR_INCLUDE: &str = "INCLUDE";
 
-    if let Ok(include_root) = fs::read_dir(kit_root.to_owned() + r"\Include\") {
-        let mut include = env::var(VAR_INCLUDE).unwrap_or_else(|_| String::new());
+    if let Ok(include_root) = fs::read_dir(kit_root.to_string() + r"\Include\") {
+        let mut include = env::var(VAR_INCLUDE).unwrap_or_default();
         if !include.ends_with(';') {
             include.push(';');
         }
-        get_dirs(include_root).filter_map(|dir| fs::read_dir(dir.path()).ok()).for_each(|dir|
+
+        get_dirs(include_root).filter_map(|dir| fs::read_dir(dir.path()).ok()).for_each(|dir| {
             get_dirs(dir).for_each(|sub_dir| if let Some(sub_dir) = sub_dir.path().to_str() {
                 if !include.contains(sub_dir) {
                     include.push_str(sub_dir);
                     include.push(';');
                 }
             })
-        );
+        });
+
         env::set_var(VAR_INCLUDE, include);
     }
 }
 
-fn get_dirs(read_dir: fs::ReadDir) -> impl Iterator<Item=fs::DirEntry> {
+fn get_dirs(read_dir: fs::ReadDir) -> impl Iterator<Item = fs::DirEntry> {
     read_dir.filter_map(|dir| dir.ok()).filter(|dir| dir.file_type().map_or(false, |ft| ft.is_dir()))
 }
 
