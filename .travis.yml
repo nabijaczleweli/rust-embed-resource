@@ -10,9 +10,15 @@ matrix:
     - env: LANGUAGE=Rust TARGET=x86_64-pc-windows-gnu
       language: rust
       rust: stable
+    - env: LANGUAGE=Rust TARGET=x86_64-pc-windows-gnu
+      language: rust
+      rust: 1.35.0
     - env: LANGUAGE=Rust TARGET=i686-pc-windows-gnu
       language: rust
       rust: stable
+    - env: LANGUAGE=Rust TARGET=i686-pc-windows-gnu
+      language: rust
+      rust: 1.35.0
     - env: LANGUAGE=Rust
       language: rust
       rust: beta

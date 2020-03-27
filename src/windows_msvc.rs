@@ -162,7 +162,7 @@ fn include_windows_10_kits_impl(kit_root: &str) {
 }
 
 fn get_dirs(read_dir: fs::ReadDir) -> impl Iterator<Item = fs::DirEntry> {
-    read_dir.filter_map(|dir| dir.ok()).filter(|dir| dir.file_type().map_or(false, |ft| ft.is_dir()))
+    read_dir.filter_map(|dir| dir.ok()).filter(|dir| dir.file_type().map(|ft| ft.is_dir()).unwrap_or(false))
 }
 
 fn try_bin_dir<R: Into<PathBuf>>(root_dir: R, x86_bin: &str, x64_bin: &str, arch: Arch) -> Option<PathBuf> {
