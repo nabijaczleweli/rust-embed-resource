@@ -24,6 +24,8 @@ install:
   - if defined MINGW curl -SL http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz -oC:\msys2-keyring.txz
   - if defined MINGW pacman --noconfirm -U C:\msys2-keyring.txz
   - if defined MINGW bash -lc "pacman --needed --noconfirm -Sy pacman-mirrors"
+  - if defined MINGW bash -lc "pacman --noconfirm -Sy pacman"
+  - if defined MINGW bash -lc "pacman --noconfirm -Su"
   - if defined MINGW bash -lc "pacman --noconfirm -Sy"
   - if defined MINGW bash -lc "pacman --noconfirm -S mingw-w64-x86_64-toolchain"
   - curl -SL https://win.rustup.rs/ -oC:\rustup-init.exe
