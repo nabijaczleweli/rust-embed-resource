@@ -20,6 +20,9 @@ environment:
 install:
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
   - if defined MINGW set PATH=C:\msys64\mingw64\bin;C:\msys64\usr\bin;%PATH%
+  # https://www.msys2.org/news/#2020-05-17-32-bit-msys2-no-longer-actively-supported
+  - if defined MINGW curl -SL http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz -oC:\msys2-keyring.txz
+  - if defined MINGW pacman --noconfirm -U C:\msys2-keyring.txz
   - if defined MINGW bash -lc "pacman --needed --noconfirm -Sy pacman-mirrors"
   - if defined MINGW bash -lc "pacman --noconfirm -Sy"
   - if defined MINGW bash -lc "pacman --noconfirm -S mingw-w64-x86_64-toolchain"
