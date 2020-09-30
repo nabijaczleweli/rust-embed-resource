@@ -27,7 +27,7 @@
 //! # Usage
 //!
 //! For the purposes of the demonstration we will assume that the resource file's name
-//! is "checksums.rc".
+//! is "checksums.rc", but it can be any name relative to the crate root.
 //!
 //! In `Cargo.toml`:
 //!

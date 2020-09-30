@@ -11,6 +11,7 @@ use winreg;
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ResourceCompiler;
 
+
 impl ResourceCompiler {
     #[inline(always)]
     pub fn new() -> ResourceCompiler {
