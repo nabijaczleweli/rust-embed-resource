@@ -29,5 +29,5 @@ exclude = ["*.enc"]
 vswhom = "0.1"
 
 [target.'cfg(all(target_os = "windows", target_env = "msvc"))'.dependencies.winreg]
-version = "0.6"
+version = "0.7"
 default-features = false
