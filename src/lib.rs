@@ -94,7 +94,7 @@ use self::windows_msvc::*;
 use self::windows_not_msvc::*;
 
 use std::env;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 
 /// Compile the Windows resource file and update the cargo search path if we're on Windows.
@@ -132,4 +132,40 @@ fn compile_impl(resource_file: &Path) {
         println!("cargo:rustc-link-search=native={}", out_dir);
         println!("cargo:rustc-link-lib=dylib={}", prefix);
     }
+}
+
+
+/// Find MSVC build tools other than the compiler and linker
+///
+/// On Windows + MSVC this can be used try to find tools such as `MIDL.EXE` in Windows Kits and/or SDK directories.
+///
+/// The compilers and linkers can be better found with the `cc` or `vswhom` crates.
+/// This always returns `None` on non-MSVC targets.
+///
+/// # Examples
+///
+/// In your build script, find `midl.exe` and use it to compile an IDL file:
+///
+/// ```rust,no_run
+/// # #[cfg(all(target_os = "windows", target_env = "msvc"))]
+/// # {
+/// extern crate embed_resource;
+/// extern crate vswhom;
+/// # use std::env;
+/// # use std::process::Command;
+///
+/// let midl = embed_resource::find_windows_sdk_tool("midl.exe").unwrap();
+///
+/// // midl.exe uses cl.exe as a preprocessor, so it needs to be in PATH
+/// let vs_locations = vswhom::VsFindResult::search().unwrap();
+/// let output = Command::new(midl)
+///     .env("PATH", vs_locations.vs_exe_path.unwrap())
+///     .args(&["/out", &env::var("OUT_DIR").unwrap()])
+///     .arg("haka.pfx.idl").output().unwrap();
+///
+/// assert!(output.status.success());
+/// # }
+/// ```
+pub fn find_windows_sdk_tool<T: AsRef<str>>(tool: T) -> Option<PathBuf> {
+    find_windows_sdk_tool_impl(tool.as_ref())
 }

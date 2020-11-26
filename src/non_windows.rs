@@ -1,4 +1,5 @@
 use std::process::Command;
+use std::path::PathBuf;
 use std::env;
 
 
@@ -37,4 +38,9 @@ fn get_windres_executable() -> Option<&'static str> {
         "i686-pc-windows-gnu" => Some("i686-w64-mingw32-windres"),
         _ => None,
     }
+}
+
+
+pub fn find_windows_sdk_tool_impl(_: &str) -> Option<PathBuf> {
+    None
 }

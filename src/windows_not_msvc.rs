@@ -1,4 +1,5 @@
 use std::process::Command;
+use std::path::PathBuf;
 
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -24,4 +25,9 @@ impl ResourceCompiler {
             Err(e) => panic!("Couldn't to execute windres to compile \"{}\" into \"{}\": {}", resource, out_file, e),
         }
     }
+}
+
+
+pub fn find_windows_sdk_tool_impl(_: &str) -> Option<PathBuf> {
+    None
 }
