@@ -25,7 +25,7 @@ impl ResourceCompiler {
 
     pub fn compile_resource(&self, out_dir: &str, prefix: &str, resource: &str) {
         // `.res`es are linkable under MSVC as well as normal libraries.
-        if !Command::new(find_windows_sdk_rc_exe().as_ref().map_or(Path::new("rc.exe"), Path::new))
+        if !Command::new(find_windows_sdk_tool("rc.exe").as_ref().map_or(Path::new("rc.exe"), Path::new))
             .args(&["/fo", &format!("{}/{}.lib", out_dir, prefix), resource])
             .status()
             .expect("Are you sure you have RC.EXE in your $PATH?")
@@ -42,23 +42,22 @@ enum Arch {
     X64,
 }
 
-
-fn find_windows_sdk_rc_exe() -> Option<PathBuf> {
+pub(crate) fn find_windows_sdk_tool(tool: &str) -> Option<PathBuf> {
     let arch = if env::var("TARGET").expect("No TARGET env var").starts_with("x86_64") {
         Arch::X64
     } else {
         Arch::X86
     };
 
-    find_windows_kits_rc_exe("KitsRoot10", arch)
-        .or_else(|| find_windows_kits_rc_exe("KitsRoot81", arch))
-        .or_else(|| find_windows_kits_rc_exe("KitsRoot", arch))
-        .or_else(|| find_latest_windows_sdk_rc_exe(arch))
-        .or_else(|| find_windows_10_kits_rc_exe("KitsRoot10", arch))
-        .or_else(|| find_with_vswhom(arch))
+    find_windows_kits_tool("KitsRoot10", arch, tool)
+        .or_else(|| find_windows_kits_tool("KitsRoot81", arch, tool))
+        .or_else(|| find_windows_kits_tool("KitsRoot", arch, tool))
+        .or_else(|| find_latest_windows_sdk_tool(arch, tool))
+        .or_else(|| find_windows_10_kits_tool("KitsRoot10", arch, tool))
+        .or_else(|| find_with_vswhom(arch, tool))
 }
 
-fn find_with_vswhom(arch: Arch) -> Option<PathBuf> {
+fn find_with_vswhom(arch: Arch, tool: &str) -> Option<PathBuf> {
     let res = VsFindResult::search();
     res.as_ref()
         .and_then(|res| res.windows_sdk_root.as_ref())
@@ -71,7 +70,7 @@ fn find_with_vswhom(arch: Arch) -> Option<PathBuf> {
             root.push(ver);
             try_bin_dir(root, "x86", "x64", arch)
         })
-        .and_then(try_rc_exe)
+        .and_then(try_tool(tool))
         .or_else(move || {
             res.and_then(|res| res.windows_sdk_root)
                 .map(PathBuf::from)
@@ -80,32 +79,32 @@ fn find_with_vswhom(arch: Arch) -> Option<PathBuf> {
                     root.pop();
                     try_bin_dir(root, "bin/x86", "bin/x64", arch)
                 })
-                .and_then(try_rc_exe)
+                .and_then(try_tool(tool))
         })
 }
 
 // Windows 8 - 10
-fn find_windows_kits_rc_exe(key: &str, arch: Arch) -> Option<PathBuf> {
+fn find_windows_kits_tool(key: &str, arch: Arch, tool: &str) -> Option<PathBuf> {
     winreg::RegKey::predef(HKEY_LOCAL_MACHINE)
         .open_subkey_with_flags(r"SOFTWARE\Microsoft\Windows Kits\Installed Roots", KEY_QUERY_VALUE)
         .and_then(|reg_key| reg_key.get_value::<String, _>(key))
         .ok()
         .and_then(|root_dir| try_bin_dir(root_dir, "bin/x86", "bin/x64", arch))
-        .and_then(try_rc_exe)
+        .and_then(try_tool(tool))
 }
 
 // Windows Vista - 7
-fn find_latest_windows_sdk_rc_exe(arch: Arch) -> Option<PathBuf> {
+fn find_latest_windows_sdk_tool(arch: Arch, tool: &str) -> Option<PathBuf> {
     winreg::RegKey::predef(HKEY_LOCAL_MACHINE)
         .open_subkey_with_flags(r"SOFTWARE\Microsoft\Microsoft SDKs\Windows", KEY_QUERY_VALUE)
         .and_then(|reg_key| reg_key.get_value::<String, _>("CurrentInstallFolder"))
         .ok()
         .and_then(|root_dir| try_bin_dir(root_dir, "Bin", "Bin/x64", arch))
-        .and_then(try_rc_exe)
+        .and_then(try_tool(tool))
 }
 
 // Windows 10 with subdir support
-fn find_windows_10_kits_rc_exe(key: &str, arch: Arch) -> Option<PathBuf> {
+fn find_windows_10_kits_tool(key: &str, arch: Arch, tool: &str) -> Option<PathBuf> {
     let kit_root = (winreg::RegKey::predef(HKEY_LOCAL_MACHINE)
         .open_subkey_with_flags(r"SOFTWARE\Microsoft\Windows Kits\Installed Roots", KEY_QUERY_VALUE)
         .and_then(|reg_key| reg_key.get_value::<String, _>(key))
@@ -121,7 +120,7 @@ fn find_windows_10_kits_rc_exe(key: &str, arch: Arch) -> Option<PathBuf> {
         }
 
         let fname = entry.file_name().into_string().unwrap();
-        if let Some(rc) = try_bin_dir(root_dir.clone(), &format!("{}/x86", fname), &format!("{}/x64", fname), arch).and_then(try_rc_exe) {
+        if let Some(rc) = try_bin_dir(root_dir.clone(), &format!("{}/x86", fname), &format!("{}/x64", fname), arch).and_then(try_tool(tool)) {
             return Some(rc);
         }
     }
@@ -183,7 +182,10 @@ fn try_bin_dir_impl(mut root_dir: PathBuf, x86_bin: &str, x64_bin: &str, arch: A
     }
 }
 
-fn try_rc_exe(mut pb: PathBuf) -> Option<PathBuf> {
-    pb.push("rc.exe");
-    if pb.exists() { Some(pb) } else { None }
+fn try_tool(tool: &str) -> Box<dyn Fn(PathBuf) ->  Option<PathBuf>> {
+    let tool = tool.to_string();
+    Box::new(move |mut pb: PathBuf|{
+        pb.push(&tool);
+        if pb.exists() { Some(pb) } else { None }
+    })
 }

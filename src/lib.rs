@@ -94,7 +94,7 @@ use self::windows_msvc::*;
 use self::windows_not_msvc::*;
 
 use std::env;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 
 /// Compile the Windows resource file and update the cargo search path if we're on Windows.
@@ -132,4 +132,12 @@ fn compile_impl(resource_file: &Path) {
         println!("cargo:rustc-link-search=native={}", out_dir);
         println!("cargo:rustc-link-lib=dylib={}", prefix);
     }
+}
+
+/// Find build tools other than the compiler and linker.
+///
+/// This will try its hardest to find tools such as `MIDL.EXE` in Windows Kits and/or SDK directories.
+/// The compilers and linkers can be better found with the `cc` or `vswhom` crates.
+pub fn find_tool<T: AsRef<str>>(tool: T) -> Option<PathBuf> {
+    find_windows_sdk_tool(tool.as_ref())
 }
