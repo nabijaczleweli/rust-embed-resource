@@ -70,7 +70,7 @@ fn find_with_vswhom(arch: Arch, tool: &str) -> Option<PathBuf> {
             root.push(ver);
             try_bin_dir(root, "x86", "x64", arch)
         })
-        .and_then(try_tool(tool))
+        .and_then(|pb| try_tool(pb, tool))
         .or_else(move || {
             res.and_then(|res| res.windows_sdk_root)
                 .map(PathBuf::from)
@@ -79,7 +79,7 @@ fn find_with_vswhom(arch: Arch, tool: &str) -> Option<PathBuf> {
                     root.pop();
                     try_bin_dir(root, "bin/x86", "bin/x64", arch)
                 })
-                .and_then(try_tool(tool))
+                .and_then(|pb| try_tool(pb, tool))
         })
 }
 
@@ -90,7 +90,7 @@ fn find_windows_kits_tool(key: &str, arch: Arch, tool: &str) -> Option<PathBuf> 
         .and_then(|reg_key| reg_key.get_value::<String, _>(key))
         .ok()
         .and_then(|root_dir| try_bin_dir(root_dir, "bin/x86", "bin/x64", arch))
-        .and_then(try_tool(tool))
+        .and_then(|pb| try_tool(pb, tool))
 }
 
 // Windows Vista - 7
@@ -100,7 +100,7 @@ fn find_latest_windows_sdk_tool(arch: Arch, tool: &str) -> Option<PathBuf> {
         .and_then(|reg_key| reg_key.get_value::<String, _>("CurrentInstallFolder"))
         .ok()
         .and_then(|root_dir| try_bin_dir(root_dir, "Bin", "Bin/x64", arch))
-        .and_then(try_tool(tool))
+        .and_then(|pb| try_tool(pb, tool))
 }
 
 // Windows 10 with subdir support
@@ -120,7 +120,7 @@ fn find_windows_10_kits_tool(key: &str, arch: Arch, tool: &str) -> Option<PathBu
         }
 
         let fname = entry.file_name().into_string().unwrap();
-        if let Some(rc) = try_bin_dir(root_dir.clone(), &format!("{}/x86", fname), &format!("{}/x64", fname), arch).and_then(try_tool(tool)) {
+        if let Some(rc) = try_bin_dir(root_dir.clone(), &format!("{}/x86", fname), &format!("{}/x64", fname), arch).and_then(|pb | try_tool(pb, tool)) {
             return Some(rc);
         }
     }
@@ -182,10 +182,8 @@ fn try_bin_dir_impl(mut root_dir: PathBuf, x86_bin: &str, x64_bin: &str, arch: A
     }
 }
 
-fn try_tool(tool: &str) -> Box<dyn Fn(PathBuf) ->  Option<PathBuf>> {
+fn try_tool(mut pb: PathBuf, tool: &str) -> Option<PathBuf> {
     let tool = tool.to_string();
-    Box::new(move |mut pb: PathBuf|{
-        pb.push(&tool);
-        if pb.exists() { Some(pb) } else { None }
-    })
+    pb.push(&tool);
+    if pb.exists() { Some(pb) } else { None }   
 }
