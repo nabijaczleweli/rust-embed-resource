@@ -42,7 +42,7 @@ enum Arch {
     X64,
 }
 
-pub(crate) fn find_windows_sdk_tool_impl(tool: &str) -> Option<PathBuf> {
+pub fn find_windows_sdk_tool_impl(tool: &str) -> Option<PathBuf> {
     let arch = if env::var("TARGET").expect("No TARGET env var").starts_with("x86_64") {
         Arch::X64
     } else {
@@ -56,6 +56,7 @@ pub(crate) fn find_windows_sdk_tool_impl(tool: &str) -> Option<PathBuf> {
         .or_else(|| find_windows_10_kits_tool("KitsRoot10", arch, tool))
         .or_else(|| find_with_vswhom(arch, tool))
 }
+
 
 fn find_with_vswhom(arch: Arch, tool: &str) -> Option<PathBuf> {
     let res = VsFindResult::search();
@@ -120,7 +121,7 @@ fn find_windows_10_kits_tool(key: &str, arch: Arch, tool: &str) -> Option<PathBu
         }
 
         let fname = entry.file_name().into_string().unwrap();
-        if let Some(rc) = try_bin_dir(root_dir.clone(), &format!("{}/x86", fname), &format!("{}/x64", fname), arch).and_then(|pb | try_tool(pb, tool)) {
+        if let Some(rc) = try_bin_dir(root_dir.clone(), &format!("{}/x86", fname), &format!("{}/x64", fname), arch).and_then(|pb| try_tool(pb, tool)) {
             return Some(rc);
         }
     }
@@ -183,7 +184,6 @@ fn try_bin_dir_impl(mut root_dir: PathBuf, x86_bin: &str, x64_bin: &str, arch: A
 }
 
 fn try_tool(mut pb: PathBuf, tool: &str) -> Option<PathBuf> {
-    let tool = tool.to_string();
-    pb.push(&tool);
-    if pb.exists() { Some(pb) } else { None }   
+    pb.push(tool);
+    if pb.exists() { Some(pb) } else { None }
 }

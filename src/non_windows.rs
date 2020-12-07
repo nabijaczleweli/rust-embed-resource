@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use std::process::Command;
+use std::path::PathBuf;
 use std::env;
 
 
@@ -41,4 +41,6 @@ fn get_windres_executable() -> Option<&'static str> {
 }
 
 
-pub(crate) fn find_windows_sdk_tool_impl(_tool: &str) -> Option<PathBuf> { None }
+pub fn find_windows_sdk_tool_impl(_: &str) -> Option<PathBuf> {
+    None
+}

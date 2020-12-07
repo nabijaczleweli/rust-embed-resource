@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use std::process::Command;
+use std::path::PathBuf;
 
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -28,4 +28,6 @@ impl ResourceCompiler {
 }
 
 
-pub(crate) fn find_windows_sdk_tool_impl(_tool: &str) -> Option<PathBuf> { None }
+pub fn find_windows_sdk_tool_impl(_: &str) -> Option<PathBuf> {
+    None
+}
