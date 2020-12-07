@@ -41,4 +41,4 @@ fn get_windres_executable() -> Option<&'static str> {
 }
 
 
-pub(crate) fn find_windows_sdk_tool(_tool: &str) -> Option<PathBuf> { None }
+pub(crate) fn find_windows_sdk_tool_impl(_tool: &str) -> Option<PathBuf> { None }

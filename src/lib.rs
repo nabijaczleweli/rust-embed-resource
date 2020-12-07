@@ -138,6 +138,6 @@ fn compile_impl(resource_file: &Path) {
 ///
 /// This will try its hardest to find tools such as `MIDL.EXE` in Windows Kits and/or SDK directories.
 /// The compilers and linkers can be better found with the `cc` or `vswhom` crates.
-pub fn find_tool<T: AsRef<str>>(tool: T) -> Option<PathBuf> {
-    find_windows_sdk_tool(tool.as_ref())
+pub fn find_windows_sdk_tool<T: AsRef<str>>(tool: T) -> Option<PathBuf> {
+    find_windows_sdk_tool_impl(tool.as_ref())
 }

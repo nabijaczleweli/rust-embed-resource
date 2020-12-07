@@ -25,7 +25,7 @@ impl ResourceCompiler {
 
     pub fn compile_resource(&self, out_dir: &str, prefix: &str, resource: &str) {
         // `.res`es are linkable under MSVC as well as normal libraries.
-        if !Command::new(find_windows_sdk_tool("rc.exe").as_ref().map_or(Path::new("rc.exe"), Path::new))
+        if !Command::new(find_windows_sdk_tool_impl("rc.exe").as_ref().map_or(Path::new("rc.exe"), Path::new))
             .args(&["/fo", &format!("{}/{}.lib", out_dir, prefix), resource])
             .status()
             .expect("Are you sure you have RC.EXE in your $PATH?")
@@ -42,7 +42,7 @@ enum Arch {
     X64,
 }
 
-pub(crate) fn find_windows_sdk_tool(tool: &str) -> Option<PathBuf> {
+pub(crate) fn find_windows_sdk_tool_impl(tool: &str) -> Option<PathBuf> {
     let arch = if env::var("TARGET").expect("No TARGET env var").starts_with("x86_64") {
         Arch::X64
     } else {
