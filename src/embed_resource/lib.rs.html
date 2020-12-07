@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../embed_resource/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../embed_resource/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -134,6 +136,42 @@
 <span id="133">133</span>
 <span id="134">134</span>
 <span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A [`Cargo` build script](http://doc.crates.io/build-script.html) library to handle compilation and inclusion of Windows</span>
 <span class="doccomment">//! resources in the most resilient fashion imaginable</span>
@@ -173,7 +211,7 @@
 <span class="doccomment">//! build = &quot;build.rs&quot;</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! [build-dependencies]</span>
-<span class="doccomment">//! embed-resource = &quot;1.3&quot;</span>
+<span class="doccomment">//! embed-resource = &quot;1.4&quot;</span>
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! In `build.rs`:</span>
@@ -231,7 +269,7 @@
 <span class="kw">use</span> <span class="self">self</span>::<span class="ident">windows_not_msvc</span>::<span class="kw-2">*</span>;
 
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">env</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
 
 
 <span class="doccomment">/// Compile the Windows resource file and update the cargo search path if we&#39;re on Windows.</span>
@@ -255,7 +293,7 @@
 <span class="doccomment">/// }</span>
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compile</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;&gt;</span>(<span class="ident">resource_file</span>: <span class="ident">T</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compile</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">resource_file</span>: <span class="ident">T</span>) {
     <span class="ident">compile_impl</span>(<span class="ident">resource_file</span>.<span class="ident">as_ref</span>())
 }
 
@@ -269,6 +307,42 @@
         <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;cargo:rustc-link-search=native={}&quot;</span>, <span class="ident">out_dir</span>);
         <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;cargo:rustc-link-lib=dylib={}&quot;</span>, <span class="ident">prefix</span>);
     }
+}
+
+
+<span class="doccomment">/// Find MSVC build tools other than the compiler and linker</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// On Windows + MSVC this can be used try to find tools such as `MIDL.EXE` in Windows Kits and/or SDK directories.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The compilers and linkers can be better found with the `cc` or `vswhom` crates.</span>
+<span class="doccomment">/// This always returns `None` on non-MSVC targets.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// In your build script, find `midl.exe` and use it to compile an IDL file:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```rust,no_run</span>
+<span class="doccomment">/// # #[cfg(all(target_os = &quot;windows&quot;, target_env = &quot;msvc&quot;))]</span>
+<span class="doccomment">/// # {</span>
+<span class="doccomment">/// extern crate embed_resource;</span>
+<span class="doccomment">/// extern crate vswhom;</span>
+<span class="doccomment">/// # use std::env;</span>
+<span class="doccomment">/// # use std::process::Command;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// let midl = embed_resource::find_windows_sdk_tool(&quot;midl.exe&quot;).unwrap();</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// // midl.exe uses cl.exe as a preprocessor, so it needs to be in PATH</span>
+<span class="doccomment">/// let vs_locations = vswhom::VsFindResult::search().unwrap();</span>
+<span class="doccomment">/// let output = Command::new(midl)</span>
+<span class="doccomment">///     .env(&quot;PATH&quot;, vs_locations.vs_exe_path.unwrap())</span>
+<span class="doccomment">///     .args(&amp;[&quot;/out&quot;, &amp;env::var(&quot;OUT_DIR&quot;).unwrap()])</span>
+<span class="doccomment">///     .arg(&quot;haka.pfx.idl&quot;).output().unwrap();</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// assert!(output.status.success());</span>
+<span class="doccomment">/// # }</span>
+<span class="doccomment">/// ```</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_windows_sdk_tool</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">tool</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> {
+    <span class="ident">find_windows_sdk_tool_impl</span>(<span class="ident">tool</span>.<span class="ident">as_ref</span>())
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "embed_resource";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
