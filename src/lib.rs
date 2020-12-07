@@ -136,8 +136,31 @@ fn compile_impl(resource_file: &Path) {
 
 /// Find build tools other than the compiler and linker.
 ///
-/// This will try its hardest to find tools such as `MIDL.EXE` in Windows Kits and/or SDK directories.
-/// The compilers and linkers can be better found with the `cc` or `vswhom` crates.
+/// On MSVC Windows this can be used try to find tools such as `MIDL.EXE` in Windows Kits and/or SDK directories.
+/// The compilers and linkers can be better found with the `cc` or `vswhom` crates. This will return `None`
+/// for non MSVC targets.
+/// # Examples
+///
+/// In your build script, find `midl.exe` and use it to compile an IDL file:
+///
+/// ```rust,no_run
+/// use std::env;
+/// use std::process::Command;
+///
+/// let midl = embed_resource::find_windows_sdk_tool("midl.exe").unwrap();
+/// let mut command = Command::new(midl);
+/// // midl.exe uses cl.exe as a preprocessor, so add it to the path
+/// let vs_locations = vswhom::VsFindResult::search().unwrap();
+/// command.env("PATH", vs_locations.vs_exe_path.unwrap());
+///
+/// let out_dir = env::var("OUT_DIR").unwrap();
+/// command.args(&["/out", &out_dir]);
+///
+/// command.arg("haka.pfx.idl");
+/// 
+/// let output = command.output().unwrap();
+/// assert!(output.status.success());
+/// ```
 pub fn find_windows_sdk_tool<T: AsRef<str>>(tool: T) -> Option<PathBuf> {
     find_windows_sdk_tool_impl(tool.as_ref())
 }
