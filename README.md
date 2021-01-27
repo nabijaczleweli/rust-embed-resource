@@ -67,8 +67,12 @@ compiled from linux. There are two ways to do this:
   installed.
 - When targeting windows-msvc, you'll need to have `llvm-rc` installed and set
   the `x86_64_pc_windows_msvc_RC` environment variable to it. Furthermore,
-  you'll also need to set the `x86_64_pc_windows_msvc_CPP` environment variable
-  to a C preprocessor set up to find the proper windows includes.
+  the cc crate is used to preprocess the file. See the [cc crate] for
+  documentation on how to set up. If your resource file includes standard
+  windows headers like `winver.h`, the CC crate will need to be set up with a C
+  compiler that knows where to find those headers.
+
+[cc crate]: https://github.com/alexcrichton/cc-rs#external-configuration-via-environment-variables
 
 ## Credit
 

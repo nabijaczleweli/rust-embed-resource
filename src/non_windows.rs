@@ -1,5 +1,5 @@
 use std::process::{Command, Stdio};
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 
 #[derive(Debug, Clone)]
 enum ToolKind {
@@ -50,6 +50,8 @@ fn compile_llvm_rc(rc_exec: &str, out_dir: &str, prefix: &str, resource: &str) {
         .cargo_metadata(false)
         .expand();
 
+    let resource_dir = Path::new(resource).parent().unwrap();
+
     let out_file = format!("{}/{}.preprocessed.rc", out_dir, prefix);
     std::fs::write(&out_file, expanded).unwrap();
 
@@ -57,6 +59,7 @@ fn compile_llvm_rc(rc_exec: &str, out_dir: &str, prefix: &str, resource: &str) {
         .args(&["/fo", &format!("{}/{}.lib", out_dir, prefix)])
         .arg(out_file)
         .stdin(Stdio::piped())
+        .current_dir(resource_dir)
         .status()
         .expect(&format!("Failed to run {}.", rc_exec))
         .success()
