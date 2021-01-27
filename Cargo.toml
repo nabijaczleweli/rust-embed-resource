@@ -25,6 +25,8 @@ authors = ["nabijaczleweli <nabijaczleweli@gmail.com>",
            "Jim McGrath <jimmc2@gmail.com>"]
 exclude = ["*.enc"]
 
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+cc = "1.0.66"
 
 [target.'cfg(all(target_os = "windows", target_env = "msvc"))'.dependencies]
 vswhom = "0.1"

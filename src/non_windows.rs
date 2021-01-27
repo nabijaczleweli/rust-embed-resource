@@ -1,12 +1,11 @@
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::path::PathBuf;
-use std::env;
 
 #[derive(Debug, Clone)]
 enum ToolKind {
     /// LLVM-rc. Note that LLVM-RC requires a separate C preprocessor to
     /// preprocess the rc file.
-    LlvmRc { cpp: String, rc: String },
+    LlvmRc { rc: String },
     /// MinGW windres.
     WindRes { exec: String },
 }
@@ -38,31 +37,31 @@ impl ResourceCompiler {
 
         match kind {
            ToolKind::WindRes { exec } => compile_windres(&exec, out_dir, prefix, resource),
-           ToolKind::LlvmRc { rc, cpp } => compile_llvm_rc(&cpp, &rc, out_dir, prefix, resource),
+           ToolKind::LlvmRc { rc } => compile_llvm_rc(&rc, out_dir, prefix, resource),
         }
     }
 }
 
-fn compile_llvm_rc(cpp_exec: &str, rc_exec: &str, out_dir: &str, prefix: &str, resource: &str) {
+fn compile_llvm_rc(rc_exec: &str, out_dir: &str, prefix: &str, resource: &str) {
     // First, we have to run cpp on the resource file as it doesn't
-    if !Command::new(cpp_exec)
-        .arg("-DRC_INVOKED")
-        .args(&["-o", &format!("{}/{}.preprocessed.rc", out_dir, prefix)])
-        .arg(resource)
-        .status()
-        .expect(&format!("Are you sure you have {} in your $PATH?", cpp_exec))
-        .success()
-    {
-        panic!("C preprocessor failed to handle specified resource file.")
-    }
+    let expanded = cc::Build::new()
+        .define("RC_INVOKED", None)
+        .file(resource)
+        .cargo_metadata(false)
+        .expand();
+
+    let out_file = format!("{}/{}.preprocessed.rc", out_dir, prefix);
+    std::fs::write(&out_file, expanded).unwrap();
+
     if !Command::new(rc_exec)
         .args(&["/fo", &format!("{}/{}.lib", out_dir, prefix)])
-        .arg(format!("{}/{}.preprocessed.rc", out_dir, prefix))
+        .arg(out_file)
+        .stdin(Stdio::piped())
         .status()
-        .expect("Are you sure you have llvm-rc in your $PATH?")
+        .expect(&format!("Failed to run {}.", rc_exec))
         .success()
     {
-        panic!("llvm-rc failed to compile specified resource file");
+        panic!("{} failed to compile the resource file.", rc_exec);
     }
 }
 
@@ -78,7 +77,7 @@ fn compile_windres(exec: &str, out_dir: &str, prefix: &str, resource: &str) {
 fn command_exists(s: &str) -> bool {
     match Command::new(s).spawn() {
         Ok(mut v) => { let _ = v.kill(); true },
-        Err(err) => false,
+        Err(_err) => false,
     }
 }
 
@@ -93,11 +92,7 @@ fn detect_tool_kind(s: &str) -> ToolKind {
     if out.stdout.starts_with(b"GNU windres") {
         ToolKind::WindRes { exec: s.into() }
     } else if out.stdout.starts_with(b"OVERVIEW: Resource Converter") {
-        let cpp = match get_var("CPP") {
-            Some(v) => v,
-            None => panic!("You must specify a C preprocessor in the CPP environment variable when using llvm-rc."),
-        };
-        ToolKind::LlvmRc { rc: s.into(), cpp }
+        ToolKind::LlvmRc { rc: s.into() }
     } else {
         panic!("Unknown RC program version found at path: {}", s)
     }
@@ -127,7 +122,7 @@ fn find_rc_tool() -> Option<ToolKind> {
 /// Get a target-specific environment variable based on the passed value. This
 /// is used to find the appropriate tool for a given target: When
 /// cross-compiling to windows `x86_64-pc-windows-msvc`, we will look for
-/// environments variables like `x86_64-pc-windows-msvc_RC`
+/// environments variables like `RC_x86_64-pc-windows-msvc`
 fn get_var(var_base: &str) -> Option<String> {
     let target = std::env::var("TARGET").unwrap();
     let host = std::env::var("HOST").unwrap();
