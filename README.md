@@ -58,6 +58,18 @@ fn main() {
 
 5. Build your project!
 
+## Cross-compilation
+
+It is possible to use this crate to embed resources in a windows executable
+compiled from linux. There are two ways to do this:
+
+- When targeting windows-gnu, make sure you have `x86_64-w64-mingw32-windres`
+  installed.
+- When targeting windows-msvc, you'll need to have `llvm-rc` installed and set
+  the `x86_64_pc_windows_msvc_RC` environment variable to it. Furthermore,
+  you'll also need to set the `x86_64_pc_windows_msvc_CPP` environment variable
+  to a C preprocessor set up to find the proper windows includes.
+
 ## Credit
 
 In chronological order:
