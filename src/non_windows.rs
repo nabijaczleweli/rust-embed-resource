@@ -1,141 +1,147 @@
 use std::process::{Command, Stdio};
 use std::path::{PathBuf, Path};
+use std::borrow::Cow;
+use std::{env, fs};
 
-#[derive(Debug, Clone)]
-enum ToolKind {
-    /// LLVM-rc. Note that LLVM-RC requires a separate C preprocessor to
-    /// preprocess the rc file.
-    LlvmRc { rc: String },
-    /// MinGW windres.
-    WindRes { exec: String },
-}
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ResourceCompiler {
-    tool: Option<ToolKind>,
+    compiler: Option<Compiler>,
 }
-
 
 impl ResourceCompiler {
     pub fn new() -> ResourceCompiler {
-        ResourceCompiler { tool: find_rc_tool() }
+        ResourceCompiler { compiler: Compiler::probe() }
     }
 
     #[inline]
     pub fn is_supported(&self) -> bool {
-        match std::env::var("TARGET").as_deref() {
-            Ok("x86_64-pc-windows-msvc") => true,
-            Ok("i686-pc-windows-msvc") => true,
-            Ok("x86_64-pc-windows-gnu") => true,
-            Ok("i686-pc-windows-gnu") => true,
-            _ => false,
-        }
+        self.compiler.is_some()
     }
 
     pub fn compile_resource(&self, out_dir: &str, prefix: &str, resource: &str) {
-        let kind = self.tool.as_ref().expect("Couldn't find windres or llvm-rc. Make sure one of them is in your $PATH.");
+        self.compiler.as_ref().expect("Not supported but we got to compile_resource()?").compile(out_dir, prefix, resource)
+    }
+}
 
-        match kind {
-           ToolKind::WindRes { exec } => compile_windres(&exec, out_dir, prefix, resource),
-           ToolKind::LlvmRc { rc } => compile_llvm_rc(&rc, out_dir, prefix, resource),
+
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+enum CompilerType {
+    /// LLVM-RC
+    ///
+    /// Requires a separate C preprocessor step on the source RC file
+    LlvmRc,
+    /// MinGW windres
+    WindRes,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+struct Compiler {
+    tp: CompilerType,
+    executable: Cow<'static, str>,
+}
+
+impl Compiler {
+    pub fn probe() -> Option<Compiler> {
+        let target = env::var("TARGET").ok()?;
+
+        if let Some(rc) = env::var(&format!("RC_{}", target))
+            .or_else(|_| env::var(&format!("RC_{}", target.replace('-', "_"))))
+            .or_else(|_| env::var("RC"))
+            .ok() {
+            return Some(guess_compiler_variant(&rc));
+        }
+
+        if target.ends_with("-pc-windows-gnu") {
+            let executable = format!("{}-w64-mingw32-windres", &target[0..target.find('-').unwrap_or_default()]);
+            if is_runnable(&executable) {
+                return Some(Compiler {
+                    tp: CompilerType::WindRes,
+                    executable: executable.into(),
+                });
+            }
+        } else if target.ends_with("-pc-windows-msvc") {
+            if is_runnable("llvm-rc") {
+                return Some(Compiler {
+                    tp: CompilerType::WindRes,
+                    executable: "llvm-rc".into(),
+                });
+            }
+        }
+
+        None
+    }
+
+    pub fn compile(&self, out_dir: &str, prefix: &str, resource: &str) {
+        match self.tp {
+            CompilerType::LlvmRc => {
+                let out_file = format!("{}/{}.lib", out_dir, prefix);
+
+                let preprocessed_path = format!("{}/{}-preprocessed.rc", out_dir, prefix);
+                fs::write(&preprocessed_path,
+                          cc::Build::new()
+                              .define("RC_INVOKED", None)
+                              .file(resource)
+                              .cargo_metadata(false)
+                              .expand())
+                    .unwrap();
+
+                try_command(Command::new(&self.executable[..])
+                                .args(&["/fo", &out_file, &preprocessed_path])
+                                .stdin(Stdio::piped())
+                                .current_dir(Path::new(resource).parent().expect("Resource parent nonexistent?")),
+                            Path::new(&self.executable[..]),
+                            "compile",
+                            &preprocessed_path,
+                            &out_file);
+            }
+            CompilerType::WindRes => {
+                let out_file = format!("{}/lib{}.a", out_dir, prefix);
+                try_command(Command::new(&self.executable[..]).args(&["--input", resource, "--output-format=coff", "--output", &out_file]),
+                            Path::new(&self.executable[..]),
+                            "compile",
+                            resource,
+                            &out_file)
+            }
         }
     }
 }
 
-fn compile_llvm_rc(rc_exec: &str, out_dir: &str, prefix: &str, resource: &str) {
-    // First, we have to run cpp on the resource file as it doesn't
-    let expanded = cc::Build::new()
-        .define("RC_INVOKED", None)
-        .file(resource)
-        .cargo_metadata(false)
-        .expand();
-
-    let resource_dir = Path::new(resource).parent().unwrap();
-
-    let out_file = format!("{}/{}.preprocessed.rc", out_dir, prefix);
-    std::fs::write(&out_file, expanded).unwrap();
-
-    if !Command::new(rc_exec)
-        .args(&["/fo", &format!("{}/{}.lib", out_dir, prefix)])
-        .arg(out_file)
-        .stdin(Stdio::piped())
-        .current_dir(resource_dir)
-        .status()
-        .expect(&format!("Failed to run {}.", rc_exec))
-        .success()
-    {
-        panic!("{} failed to compile the resource file.", rc_exec);
-    }
-}
-
-fn compile_windres(exec: &str, out_dir: &str, prefix: &str, resource: &str) {
-    let out_file = format!("{}/lib{}.a", out_dir, prefix);
-    match Command::new(exec).args(&["--input", resource, "--output-format=coff", "--output", &out_file]).status() {
+fn try_command(cmd: &mut Command, exec: &Path, action: &str, whom: &str, whre: &str) {
+    match cmd.status() {
         Ok(stat) if stat.success() => {}
-        Ok(stat) => panic!("{} failed to compile \"{}\" into \"{}\" with {}", exec, resource, out_file, stat),
-        Err(e) => panic!("Couldn't to execute {} to compile \"{}\" into \"{}\": {}", exec, resource, out_file, e),
+        Ok(stat) => panic!("{} failed to {} \"{}\" into \"{}\" with {}", exec.display(), action, whom, whre, stat),
+        Err(e) => panic!("Couldn't execute {} to {} \"{}\" into \"{}\": {}", exec.display(), action, whom, whre, e),
     }
 }
 
-fn command_exists(s: &str) -> bool {
-    match Command::new(s).spawn() {
-        Ok(mut v) => { let _ = v.kill(); true },
-        Err(_err) => false,
-    }
-}
-
-fn detect_tool_kind(s: &str) -> ToolKind {
-    // -V will print the version in windres. /? will print the help in llvm-rc
-    // and microsoft rc. They can be combined, /? takes precedence over -V.
-    let out = match Command::new(s).args(&["-V", "/?"]).output() {
-        Ok(v) => v,
-        Err(err) => panic!("Failed to run {}: {}", s, err)
-    };
-
-    if out.stdout.starts_with(b"GNU windres") {
-        ToolKind::WindRes { exec: s.into() }
-    } else if out.stdout.starts_with(b"OVERVIEW: Resource Converter") {
-        ToolKind::LlvmRc { rc: s.into() }
-    } else {
-        panic!("Unknown RC program version found at path: {}", s)
-    }
-}
-
-fn find_rc_tool() -> Option<ToolKind> {
-    let target = std::env::var("TARGET").ok()?;
-
-    // If there's an RC binary explicitly set in an environment variable, use
-    // that.
-    if let Some(rc) = get_var("RC") {
-        let kind = detect_tool_kind(&rc);
-        return Some(kind)
-    }
-
-    // Otherwise, try to autodetect based on target.
-    if target == "x86_64-pc-windows-gnu" && command_exists("x86_64-w64-mingw32-windres") {
-        Some(ToolKind::WindRes { exec: "x86_64-w64-mingw32-windres".into() })
-    } else if target == "i686-pc-windows-gnu" && command_exists("i686-w64-mingw32-windres") {
-        Some(ToolKind::WindRes { exec: "i686-w64-mingw32-windres".into() })
-    } else {
-        None
+/// -V will print the version in windres.
+/// /? will print the help in LLVM-RC and Microsoft RC.EXE.
+/// If combined, /? takes precedence over -V.
+fn guess_compiler_variant(s: &str) -> Compiler {
+    match Command::new(s).args(&["-V", "/?"]).output() {
+        Ok(out) => {
+            if out.stdout.starts_with(b"GNU windres") {
+                Compiler {
+                    executable: s.to_string().into(),
+                    tp: CompilerType::WindRes,
+                }
+            } else if out.stdout.starts_with(b"OVERVIEW: Resource Converter") {
+                Compiler {
+                    executable: s.to_string().into(),
+                    tp: CompilerType::LlvmRc,
+                }
+            } else {
+                panic!("Unknown RC compiler variant: {}", s)
+            }
+        }
+        Err(err) => panic!("Couldn't execute {}: {}", s, err),
     }
 }
 
 
-/// Get a target-specific environment variable based on the passed value. This
-/// is used to find the appropriate tool for a given target: When
-/// cross-compiling to windows `x86_64-pc-windows-msvc`, we will look for
-/// environments variables like `RC_x86_64-pc-windows-msvc`
-fn get_var(var_base: &str) -> Option<String> {
-    let target = std::env::var("TARGET").unwrap();
-    let host = std::env::var("HOST").unwrap();
-    let kind = if host == target { "HOST" } else { "TARGET" };
-    let target_u = target.replace("-", "_");
-    std::env::var(&format!("{}_{}", var_base, target))
-        .or_else(|_| std::env::var(&format!("{}_{}", var_base, target_u)))
-        .or_else(|_| std::env::var(&format!("{}_{}", kind, var_base)))
-        .or_else(|_| std::env::var(var_base))
-        .ok()
+fn is_runnable(s: &str) -> bool {
+    Command::new(s).spawn().map(|mut c| c.kill()).is_ok()
 }
 
 pub fn find_windows_sdk_tool_impl(_: &str) -> Option<PathBuf> {

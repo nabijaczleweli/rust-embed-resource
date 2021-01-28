@@ -58,22 +58,6 @@ fn main() {
 
 5. Build your project!
 
-## Cross-compilation
-
-It is possible to use this crate to embed resources in a windows executable
-compiled from linux. There are two ways to do this:
-
-- When targeting windows-gnu, make sure you have `x86_64-w64-mingw32-windres`
-  installed.
-- When targeting windows-msvc, you'll need to have `llvm-rc` installed and set
-  the `x86_64_pc_windows_msvc_RC` environment variable to it. Furthermore,
-  the cc crate is used to preprocess the file. See the [cc crate] for
-  documentation on how to set up. If your resource file includes standard
-  windows headers like `winver.h`, the CC crate will need to be set up with a C
-  compiler that knows where to find those headers.
-
-[cc crate]: https://github.com/alexcrichton/cc-rs#external-configuration-via-environment-variables
-
 ## Credit
 
 In chronological order:

@@ -49,6 +49,16 @@
 //! }
 //! ```
 //!
+//! # Cross-compilation
+//!
+//! It is possible to embed resources in Windows executables built on non-Windows hosts. There are two ways to do this:
+//!
+//! When targetting `*-pc-windows-gnu`, `*-w64-mingw32-windres` is attempted by default, for `*-pc-windows-msvc` it's `llvm-rc`,
+//! this can be overriden by setting `RC_$TARGET`, `RC_${TARGET//-/_}`, or `RC` environment variables.
+//!
+//! When compiling with LLVM-RC, an external C compiler is used to preprocess the resource,
+//! preloaded with configuration from [`cc`](https://github.com/alexcrichton/cc-rs#external-configuration-via-environment-variables).
+//!
 //! # Credit
 //!
 //! In chronological order:
@@ -74,6 +84,8 @@
 //!   * ThePhD
 
 
+#[cfg(not(target_os = "windows"))]
+extern crate cc;
 #[cfg(all(target_os = "windows", target_env = "msvc"))]
 extern crate vswhom;
 #[cfg(all(target_os = "windows", target_env = "msvc"))]
