@@ -74,8 +74,13 @@ In chronological order:
 
 [@SonnyX](https://github.com/SonnyX) -- Windows cross-compilation support and testing
 
+[@MSxDOS](https://github.com/MSxDOS) -- finding and supplying RC.EXE its esoteric header include paths
+
+[@roblabla](https://github.com/roblabla) -- cross-compilation to Windows MSVC via LLVM-RC
+
 ## Special thanks
 
 To all who support further development on Patreon, in particular:
 
   * ThePhD
+  * Embark Studios

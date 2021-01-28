@@ -77,11 +77,14 @@
 //!
 //! [@MSxDOS](https://github.com/MSxDOS) -- finding and supplying RC.EXE its esoteric header include paths
 //!
+//! [@roblabla](https://github.com/roblabla) -- cross-compilation to Windows MSVC via LLVM-RC
+//!
 //! # Special thanks
 //!
 //! To all who support further development on [Patreon](https://patreon.com/nabijaczleweli), in particular:
 //!
 //!   * ThePhD
+//!   * Embark Studios
 
 
 #[cfg(not(target_os = "windows"))]
