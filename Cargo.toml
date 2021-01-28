@@ -22,7 +22,8 @@ authors = ["nabijaczleweli <nabijaczleweli@gmail.com>",
            "Johan Andersson <repi@repi.se>",
            "Jordan Poles <jpdev.noreply@gmail.com>",
            "MSxDOS <melcodos@gmail.com>",
-           "Jim McGrath <jimmc2@gmail.com>"]
+           "Jim McGrath <jimmc2@gmail.com>",
+           "roblabla <unfiltered@roblab.la>"]
 exclude = ["*.enc"]
 
 
