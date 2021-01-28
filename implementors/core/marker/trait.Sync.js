@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["cc"] = [{"text":"impl Sync for Build","synthetic":true,"types":[]},{"text":"impl Sync for Error","synthetic":true,"types":[]},{"text":"impl Sync for Tool","synthetic":true,"types":[]},{"text":"impl Sync for VsVers","synthetic":true,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

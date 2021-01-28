@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["cc"] = [{"text":"impl RefUnwindSafe for Build","synthetic":true,"types":[]},{"text":"impl RefUnwindSafe for Error","synthetic":true,"types":[]},{"text":"impl RefUnwindSafe for Tool","synthetic":true,"types":[]},{"text":"impl RefUnwindSafe for VsVers","synthetic":true,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

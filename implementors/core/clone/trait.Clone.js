@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["cc"] = [{"text":"impl Clone for VsVers","synthetic":false,"types":[]},{"text":"impl Clone for Build","synthetic":false,"types":[]},{"text":"impl Clone for Error","synthetic":false,"types":[]},{"text":"impl Clone for Tool","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
