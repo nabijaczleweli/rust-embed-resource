@@ -63,7 +63,7 @@ impl Compiler {
         } else if target.ends_with("-pc-windows-msvc") {
             if is_runnable("llvm-rc") {
                 return Some(Compiler {
-                    tp: CompilerType::WindRes,
+                    tp: CompilerType::LlvmRc,
                     executable: "llvm-rc".into(),
                 });
             }
