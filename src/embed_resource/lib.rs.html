@@ -187,6 +187,8 @@
 <span id="184">184</span>
 <span id="185">185</span>
 <span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A [`Cargo` build script](http://doc.crates.io/build-script.html) library to handle compilation and inclusion of Windows</span>
 <span class="doccomment">//! resources in the most resilient fashion imaginable</span>
@@ -309,6 +311,8 @@
 <span class="doccomment">/// but on MSVC Windows, this will try its hardest to find `RC.EXE` in Windows Kits and/or SDK directories,</span>
 <span class="doccomment">/// falling back to [Jon Blow&#39;s VS discovery script](https://pastebin.com/3YvWQa5c),</span>
 <span class="doccomment">/// and on Windows 10 `%INCLUDE%` will be updated to help `RC.EXE` find `windows.h` and friends.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// `$OUT_DIR` is added to the include search path.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">///</span>
