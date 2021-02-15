@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["cc"] = [{"text":"impl Freeze for Build","synthetic":true,"types":[]},{"text":"impl Freeze for Error","synthetic":true,"types":[]},{"text":"impl Freeze for Tool","synthetic":true,"types":[]},{"text":"impl Freeze for VsVers","synthetic":true,"types":[]}];
+implementors["cc"] = [{"text":"impl Freeze for VsVers","synthetic":true,"types":[]},{"text":"impl Freeze for Build","synthetic":true,"types":[]},{"text":"impl Freeze for Error","synthetic":true,"types":[]},{"text":"impl Freeze for Tool","synthetic":true,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
