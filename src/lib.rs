@@ -120,6 +120,8 @@ use std::path::{Path, PathBuf};
 /// falling back to [Jon Blow's VS discovery script](https://pastebin.com/3YvWQa5c),
 /// and on Windows 10 `%INCLUDE%` will be updated to help `RC.EXE` find `windows.h` and friends.
 ///
+/// `$OUT_DIR` is added to the include search path.
+///
 /// # Examples
 ///
 /// In your build script, assuming the crate's name is "checksums":

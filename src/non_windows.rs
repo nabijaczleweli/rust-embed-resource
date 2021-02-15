@@ -83,6 +83,7 @@ impl Compiler {
                               .define("RC_INVOKED", None)
                               .file(resource)
                               .cargo_metadata(false)
+                              .include(out_dir)
                               .expand())
                     .unwrap();
 
@@ -97,7 +98,7 @@ impl Compiler {
             }
             CompilerType::WindRes => {
                 let out_file = format!("{}/lib{}.a", out_dir, prefix);
-                try_command(Command::new(&self.executable[..]).args(&["--input", resource, "--output-format=coff", "--output", &out_file]),
+                try_command(Command::new(&self.executable[..]).args(&["--input", resource, "--output-format=coff", "--output", &out_file, "--include-dir", out_dir]),
                             Path::new(&self.executable[..]),
                             "compile",
                             resource,
