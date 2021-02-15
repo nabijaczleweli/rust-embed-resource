@@ -136,29 +136,30 @@ fn include_windows_10_kits(kit_root: &str) {
     static IS_INCLUDED: AtomicBool = AtomicBool::new(false);
 
     if !IS_INCLUDED.swap(true, SeqCst) {
-        include_windows_10_kits_impl(kit_root);
-    }
-}
-
-fn include_windows_10_kits_impl(kit_root: &str) {
-    const VAR_INCLUDE: &str = "INCLUDE";
-
-    if let Ok(include_root) = fs::read_dir(kit_root.to_string() + r"\Include\") {
-        let mut include = env::var(VAR_INCLUDE).unwrap_or_default();
+        let mut include = env::var("INCLUDE").unwrap_or_default();
         if !include.ends_with(';') {
             include.push(';');
         }
 
-        get_dirs(include_root).filter_map(|dir| fs::read_dir(dir.path()).ok()).for_each(|dir| {
-            get_dirs(dir).for_each(|sub_dir| if let Some(sub_dir) = sub_dir.path().to_str() {
-                if !include.contains(sub_dir) {
-                    include.push_str(sub_dir);
-                    include.push(';');
-                }
-            })
-        });
+        if let Ok(include_root) = fs::read_dir(kit_root.to_string() + r"\Include\") {
+            get_dirs(include_root).filter_map(|dir| fs::read_dir(dir.path()).ok()).for_each(|dir| {
+                get_dirs(dir).for_each(|sub_dir| if let Some(sub_dir) = sub_dir.path().to_str() {
+                    if !include.contains(sub_dir) {
+                        include.push_str(sub_dir);
+                        include.push(';');
+                    }
+                })
+            });
+        }
 
-        env::set_var(VAR_INCLUDE, include);
+        if let Some(cl) = cc::windows_registry::find_tool(env::var("TARGET").expect("No TARGET env var").as_str(), "cl.exe") {
+            if let Some((_, ipaths)) = cl.env().iter().find(|(k, _)| k == "INCLUDE") {
+                include.push_str(ipaths.to_str().expect("%INCLUDE% from cc nonrepresentable"));
+                include.push(';');
+            }
+        }
+
+        env::set_var("INCLUDE", include);
     }
 }
 

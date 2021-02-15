@@ -87,7 +87,7 @@
 //!   * Embark Studios
 
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(any(not(target_os = "windows"), all(target_os = "windows", target_env = "msvc")))]
 extern crate cc;
 #[cfg(all(target_os = "windows", target_env = "msvc"))]
 extern crate vswhom;
