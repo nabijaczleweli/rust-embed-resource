@@ -31,6 +31,7 @@ exclude = ["*.enc"]
 cc = "1.0"
 
 [target.'cfg(all(target_os = "windows", target_env = "msvc"))'.dependencies]
+cc = "1.0"
 vswhom = "0.1"
 
 [target.'cfg(all(target_os = "windows", target_env = "msvc"))'.dependencies.winreg]
