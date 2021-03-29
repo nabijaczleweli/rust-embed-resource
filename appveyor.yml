@@ -29,6 +29,7 @@ install:
   - if defined MINGW pacman --noconfirm -U C:\pacman.txz
   - if defined MINGW bash -lc "pacman --needed --noconfirm -Sy pacman-mirrors"
   - if defined MINGW bash -lc "pacman --noconfirm -Sy pacman"
+  - if defined MINGW bash -lc "pacman --noconfirm -Sy"
   - if defined MINGW bash -lc "pacman --noconfirm -Su"
   - if defined MINGW bash -lc "pacman --noconfirm -Sy"
   - if defined MINGW bash -lc "pacman --noconfirm -S mingw-w64-x86_64-toolchain"
