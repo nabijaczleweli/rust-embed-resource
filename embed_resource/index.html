@@ -1,10 +1,10 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `embed_resource` crate."><meta name="keywords" content="rust, rustlang, rust-lang, embed_resource"><title>embed_resource - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A `Cargo` build script library to handle compilation and inclusion of Windows resources in the most resilient fashion imaginable"><meta name="keywords" content="rust, rustlang, rust-lang, embed_resource"><title>embed_resource - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><script src="../crates.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../embed_resource/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate embed_resource</p><div class="block version"><p>Version 1.6.2</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all embed_resource's items</p></a><div class="block items"><ul><li><a href="#functions">Functions</a></li></ul></div><p class="location"></p><div id="sidebar-vars" data-name="embed_resource" data-ty="mod" data-relpath="../"></div></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Crate <a class="mod" href="">embed_resource</a></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/embed_resource/lib.rs.html#1-188" title="goto source code">[src]</a></span></h1><div class="docblock"><p>A <a href="http://doc.crates.io/build-script.html"><code>Cargo</code> build script</a> library to handle compilation and inclusion of Windows
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../embed_resource/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate embed_resource</p><div class="block version"><p>Version 1.6.3</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all embed_resource's items</p></a><div class="block items"><ul><li><a href="#functions">Functions</a></li></ul></div><p class="location"></p><div id="sidebar-vars" data-name="embed_resource" data-ty="mod" data-relpath="../"></div></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Crate <a class="mod" href="">embed_resource</a></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/embed_resource/lib.rs.html#1-188" title="goto source code">[src]</a></span></h1><div class="docblock"><p>A <a href="http://doc.crates.io/build-script.html"><code>Cargo</code> build script</a> library to handle compilation and inclusion of Windows
 resources in the most resilient fashion imaginable</p>
 <h1 id="background" class="section-header"><a href="#background">Background</a></h1>
-<p>Including Windows resources seems very easy at first, despite the build scripts' abhorrent documentation:
+<p>Including Windows resources seems very easy at first, despite the build scripts’ abhorrent documentation:
 <a href="https://github.com/nabijaczleweli/cargo-update/commit/ef4346c#diff-a7b0a2dee0126cddf994326e705a91ea">compile with <code>windres</code>, then make linkable with
 <code>ar</code></a>.</p>
 <p>I was very happy with that solution until it was brought to my attention, that <a href="https://github.com/nabijaczleweli/cargo-update/commit/f57e9c3#diff-a7b0a2dee0126cddf994326e705a91ea">MSVC uses something
@@ -22,8 +22,8 @@ and realising how error-prone that was, then being <a href="https://chat.stackov
 Shepmaster</a>
 to extract it to a crate, here we are.</p>
 <h1 id="usage" class="section-header"><a href="#usage">Usage</a></h1>
-<p>For the purposes of the demonstration we will assume that the resource file's name
-is &quot;checksums.rc&quot;, but it can be any name relative to the crate root.</p>
+<p>For the purposes of the demonstration we will assume that the resource file’s name
+is “checksums.rc”, but it can be any name relative to the crate root.</p>
 <p>In <code>Cargo.toml</code>:</p>
 <pre><code class="language-toml"># The general section with crate name, license, etc.
 build = &quot;build.rs&quot;
@@ -41,20 +41,20 @@ embed-resource = &quot;1.6&quot;
 }</pre></div>
 <h1 id="cross-compilation" class="section-header"><a href="#cross-compilation">Cross-compilation</a></h1>
 <p>It is possible to embed resources in Windows executables built on non-Windows hosts. There are two ways to do this:</p>
-<p>When targetting <code>*-pc-windows-gnu</code>, <code>*-w64-mingw32-windres</code> is attempted by default, for <code>*-pc-windows-msvc</code> it's <code>llvm-rc</code>,
+<p>When targetting <code>*-pc-windows-gnu</code>, <code>*-w64-mingw32-windres</code> is attempted by default, for <code>*-pc-windows-msvc</code> it’s <code>llvm-rc</code>,
 this can be overriden by setting <code>RC_$TARGET</code>, <code>RC_${TARGET//-/_}</code>, or <code>RC</code> environment variables.</p>
 <p>When compiling with LLVM-RC, an external C compiler is used to preprocess the resource,
 preloaded with configuration from <a href="https://github.com/alexcrichton/cc-rs#external-configuration-via-environment-variables"><code>cc</code></a>.</p>
 <h1 id="credit" class="section-header"><a href="#credit">Credit</a></h1>
 <p>In chronological order:</p>
-<p><a href="https://github.com/liigo">@liigo</a> -- persistency in pestering me and investigating problems where I have failed</p>
-<p><a href="https://github.com/mzji">@mzji</a> -- MSVC lab rat</p>
-<p><a href="https://github.com/TheCatPlusPlus">@TheCatPlusPlus</a> -- knowledge and providing first iteration of manifest-embedding code</p>
-<p><a href="https://github.com/azyobuzin">@azyobuzin</a> -- providing code for finding places where RC.EXE could hide</p>
-<p><a href="https://github.com/retep998">@retep998</a> -- fixing MSVC support</p>
-<p><a href="https://github.com/SonnyX">@SonnyX</a> -- Windows cross-compilation support and testing</p>
-<p><a href="https://github.com/MSxDOS">@MSxDOS</a> -- finding and supplying RC.EXE its esoteric header include paths</p>
-<p><a href="https://github.com/roblabla">@roblabla</a> -- cross-compilation to Windows MSVC via LLVM-RC</p>
+<p><a href="https://github.com/liigo">@liigo</a> – persistency in pestering me and investigating problems where I have failed</p>
+<p><a href="https://github.com/mzji">@mzji</a> – MSVC lab rat</p>
+<p><a href="https://github.com/TheCatPlusPlus">@TheCatPlusPlus</a> – knowledge and providing first iteration of manifest-embedding code</p>
+<p><a href="https://github.com/azyobuzin">@azyobuzin</a> – providing code for finding places where RC.EXE could hide</p>
+<p><a href="https://github.com/retep998">@retep998</a> – fixing MSVC support</p>
+<p><a href="https://github.com/SonnyX">@SonnyX</a> – Windows cross-compilation support and testing</p>
+<p><a href="https://github.com/MSxDOS">@MSxDOS</a> – finding and supplying RC.EXE its esoteric header include paths</p>
+<p><a href="https://github.com/roblabla">@roblabla</a> – cross-compilation to Windows MSVC via LLVM-RC</p>
 <h1 id="special-thanks" class="section-header"><a href="#special-thanks">Special thanks</a></h1>
 <p>To all who support further development on <a href="https://patreon.com/nabijaczleweli">Patreon</a>, in particular:</p>
 <ul>
@@ -62,7 +62,7 @@ preloaded with configuration from <a href="https://github.com/alexcrichton/cc-rs
 <li>Embark Studios</li>
 </ul>
 </div><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
-<table><tr class="module-item"><td><a class="fn" href="fn.compile.html" title="embed_resource::compile fn">compile</a></td><td class="docblock-short"><p>Compile the Windows resource file and update the cargo search path if we're on Windows.</p>
+<table><tr class="module-item"><td><a class="fn" href="fn.compile.html" title="embed_resource::compile fn">compile</a></td><td class="docblock-short"><p>Compile the Windows resource file and update the cargo search path if we’re on Windows.</p>
 </td></tr><tr class="module-item"><td><a class="fn" href="fn.find_windows_sdk_tool.html" title="embed_resource::find_windows_sdk_tool fn">find_windows_sdk_tool</a></td><td class="docblock-short"><p>Find MSVC build tools other than the compiler and linker</p>
-</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="embed_resource"></div>
-    <script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="embed_resource" data-search-js="../search-index.js"></div>
+    <script src="../main.js"></script></body></html>

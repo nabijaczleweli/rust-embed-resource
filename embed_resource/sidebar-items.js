@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["compile","Compile the Windows resource file and update the cargo search path if we're on Windows."],["find_windows_sdk_tool","Find MSVC build tools other than the compiler and linker"]]});
+initSidebarItems({"fn":[["compile","Compile the Windows resource file and update the cargo search path if we’re on Windows."],["find_windows_sdk_tool","Find MSVC build tools other than the compiler and linker"]]});

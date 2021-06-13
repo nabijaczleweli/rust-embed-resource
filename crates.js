@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["cc","embed_resource"];
