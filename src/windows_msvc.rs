@@ -49,11 +49,11 @@ pub fn find_windows_sdk_tool_impl(tool: &str) -> Option<PathBuf> {
         Arch::X86
     };
 
-    find_windows_kits_tool("KitsRoot10", arch, tool)
+    find_windows_10_kits_tool("KitsRoot10", arch, tool)
+        .or_else(|| find_windows_kits_tool("KitsRoot10", arch, tool))
         .or_else(|| find_windows_kits_tool("KitsRoot81", arch, tool))
         .or_else(|| find_windows_kits_tool("KitsRoot", arch, tool))
         .or_else(|| find_latest_windows_sdk_tool(arch, tool))
-        .or_else(|| find_windows_10_kits_tool("KitsRoot10", arch, tool))
         .or_else(|| find_with_vswhom(arch, tool))
 }
 
