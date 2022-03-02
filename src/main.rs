@@ -8,7 +8,7 @@ use std::env;
 
 
 fn main() {
-    #[cfg(all(target_os = "windows", target_env = "msvc"))]
+    #[cfg(target_os = "windows")]
     env::set_var("TARGET",
                  if cfg!(target_arch = "x86_64") {
                      "x86_64"
