@@ -112,7 +112,7 @@ use std::env;
 use std::path::{Path, PathBuf};
 
 
-/// Compile the Windows resource file and update the cargo search path if we're on Windows.
+/// Compile the Windows resource file and update the cargo search path if building for Windows.
 ///
 /// On non-Windows non-Windows-cross-compile-target this does nothing, on non-MSVC Windows and Windows cross-compile targets,
 /// this chains `windres` with `ar`,
