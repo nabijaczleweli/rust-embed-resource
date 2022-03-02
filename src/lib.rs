@@ -86,6 +86,7 @@
 //!
 //!   * ThePhD
 //!   * Embark Studios
+//!   * Jasper Bekkers
 
 
 #[cfg(any(not(target_os = "windows"), all(target_os = "windows", target_env = "msvc")))]
@@ -123,6 +124,11 @@ use std::path::{Path, PathBuf};
 /// and on Windows 10 `%INCLUDE%` will be updated to help `RC.EXE` find `windows.h` and friends.
 ///
 /// `$OUT_DIR` is added to the include search path.
+///
+/// Note that this does *nothing* if building with rustc before 1.50.0 and there's a library in the crate,
+/// since the resource is linked to the library, if any, instead of the binaries.
+///
+/// Since rustc 1.50.0, the resource is linked only to the binaries.
 ///
 /// # Examples
 ///
