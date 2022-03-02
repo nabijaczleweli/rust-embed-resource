@@ -14,6 +14,10 @@ extern crate embed_resource;
 fn main() {
     // Compile and link checksums.rc
     embed_resource::compile("checksums.rc");
+
+    // Or, to select a resource file for each binary separately
+    embed_resource::compile_for("assets/poke-a-mango.rc", &["poke-a-mango", "poke-a-mango-installer"]);
+    embed_resource::compile_for("assets/uninstaller.rc", &["unins001"]);
 }
 ```
 

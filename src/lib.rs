@@ -112,6 +112,7 @@ use self::windows_msvc::*;
 use self::windows_not_msvc::*;
 
 use std::env;
+use std::fmt::Display;
 use std::path::{Path, PathBuf};
 
 
@@ -142,18 +143,8 @@ use std::path::{Path, PathBuf};
 ///     embed_resource::compile("checksums.rc");
 /// }
 /// ```
-#[inline]
 pub fn compile<T: AsRef<Path>>(resource_file: T) {
-    compile_impl(resource_file.as_ref())
-}
-
-fn compile_impl(resource_file: &Path) {
-    let comp = ResourceCompiler::new();
-    if comp.is_supported() {
-        let prefix = &resource_file.file_stem().expect("resource_file has no stem").to_str().expect("resource_file's stem not UTF-8");
-        let out_dir = env::var("OUT_DIR").expect("No OUT_DIR env var");
-
-        let out_file = comp.compile_resource(&out_dir, &prefix, resource_file.to_str().expect("resource_file not UTF-8"));
+    if let Some((prefix, out_dir, out_file)) = compile_impl(resource_file.as_ref()) {
         if rustc_version::version().expect("couldn't get rustc version") >= rustc_version::Version::new(1, 50, 0) {
             println!("cargo:rustc-link-arg-bins={}", out_file);
         } else {
@@ -162,6 +153,41 @@ fn compile_impl(resource_file: &Path) {
             println!("cargo:rustc-link-search=native={}", out_dir);
             println!("cargo:rustc-link-lib=dylib={}", prefix);
         }
+    }
+}
+
+/// Likewise, but only for select binaries.
+///
+/// Only available since rustc 1.55.0, does nothing before.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// extern crate embed_resource;
+///
+/// fn main() {
+///     embed_resource::compile_for("assets/poke-a-mango.rc", &["poke-a-mango", "poke-a-mango-installer"]);
+///     embed_resource::compile_for("assets/uninstaller.rc", &["unins001"]);
+/// }
+/// ```
+pub fn compile_for<T: AsRef<Path>, J: Display, I: IntoIterator<Item = J>>(resource_file: T, for_bins: I) {
+    if let Some((_, _, out_file)) = compile_impl(resource_file.as_ref()) {
+        for bin in for_bins {
+            println!("cargo:rustc-link-arg-bin={}={}", bin, out_file);
+        }
+    }
+}
+
+fn compile_impl(resource_file: &Path) -> Option<(&str, String, String)> {
+    let comp = ResourceCompiler::new();
+    if comp.is_supported() {
+        let prefix = &resource_file.file_stem().expect("resource_file has no stem").to_str().expect("resource_file's stem not UTF-8");
+        let out_dir = env::var("OUT_DIR").expect("No OUT_DIR env var");
+
+        let out_file = comp.compile_resource(&out_dir, &prefix, resource_file.to_str().expect("resource_file not UTF-8"));
+        Some((prefix, out_dir, out_file))
+    } else {
+        None
     }
 }
 

@@ -17,5 +17,8 @@ fn main() {
                  });
 
     env::set_var("OUT_DIR", ".");
-    embed_resource::compile(env::args().nth(1).expect("Specify the resource file to be compiled as the first argument."))
+
+    let resource = env::args().nth(1).expect("Specify the resource file to be compiled as the first argument.");
+    embed_resource::compile(&resource);
+    embed_resource::compile_for(&resource, &["embed_resource", "embed_resource-installer"]);
 }
