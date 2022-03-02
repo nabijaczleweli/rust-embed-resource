@@ -19,7 +19,7 @@ impl ResourceCompiler {
         self.compiler.is_some()
     }
 
-    pub fn compile_resource(&self, out_dir: &str, prefix: &str, resource: &str) {
+    pub fn compile_resource(&self, out_dir: &str, prefix: &str, resource: &str) -> String {
         self.compiler.as_ref().expect("Not supported but we got to compile_resource()?").compile(out_dir, prefix, resource)
     }
 }
@@ -72,7 +72,7 @@ impl Compiler {
         None
     }
 
-    pub fn compile(&self, out_dir: &str, prefix: &str, resource: &str) {
+    pub fn compile(&self, out_dir: &str, prefix: &str, resource: &str) -> String {
         match self.tp {
             CompilerType::LlvmRc => {
                 let out_file = format!("{}/{}.lib", out_dir, prefix);
@@ -95,14 +95,17 @@ impl Compiler {
                             "compile",
                             &preprocessed_path,
                             &out_file);
+                out_file
             }
             CompilerType::WindRes => {
                 let out_file = format!("{}/lib{}.a", out_dir, prefix);
-                try_command(Command::new(&self.executable[..]).args(&["--input", resource, "--output-format=coff", "--output", &out_file, "--include-dir", out_dir]),
+                try_command(Command::new(&self.executable[..])
+                                .args(&["--input", resource, "--output-format=coff", "--output", &out_file, "--include-dir", out_dir]),
                             Path::new(&self.executable[..]),
                             "compile",
                             resource,
-                            &out_file)
+                            &out_file);
+                out_file
             }
         }
     }

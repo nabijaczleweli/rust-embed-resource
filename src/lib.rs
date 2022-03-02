@@ -57,7 +57,8 @@
 //! this can be overriden by setting `RC_$TARGET`, `RC_${TARGET//-/_}`, or `RC` environment variables.
 //!
 //! When compiling with LLVM-RC, an external C compiler is used to preprocess the resource,
-//! preloaded with configuration from [`cc`](https://github.com/alexcrichton/cc-rs#external-configuration-via-environment-variables).
+//! preloaded with configuration from
+//! [`cc`](https://github.com/alexcrichton/cc-rs#external-configuration-via-environment-variables).
 //!
 //! # Credit
 //!
@@ -93,6 +94,7 @@ extern crate cc;
 extern crate vswhom;
 #[cfg(all(target_os = "windows", target_env = "msvc"))]
 extern crate winreg;
+extern crate rustc_version;
 
 #[cfg(not(target_os = "windows"))]
 mod non_windows;
@@ -145,9 +147,15 @@ fn compile_impl(resource_file: &Path) {
         let prefix = &resource_file.file_stem().expect("resource_file has no stem").to_str().expect("resource_file's stem not UTF-8");
         let out_dir = env::var("OUT_DIR").expect("No OUT_DIR env var");
 
-        comp.compile_resource(&out_dir, &prefix, resource_file.to_str().expect("resource_file not UTF-8"));
-        println!("cargo:rustc-link-search=native={}", out_dir);
-        println!("cargo:rustc-link-lib=dylib={}", prefix);
+        let out_file = comp.compile_resource(&out_dir, &prefix, resource_file.to_str().expect("resource_file not UTF-8"));
+        if rustc_version::version().expect("couldn't get rustc version") >= rustc_version::Version::new(1, 50, 0) {
+            println!("cargo:rustc-link-arg-bins={}", out_file);
+        } else {
+            // Cargo pre-0.51.0 (rustc pre-1.50.0) compat
+            // Doesn't work when the calling crate has a library
+            println!("cargo:rustc-link-search=native={}", out_dir);
+            println!("cargo:rustc-link-lib=dylib={}", prefix);
+        }
     }
 }
 

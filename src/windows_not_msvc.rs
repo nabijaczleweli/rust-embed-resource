@@ -18,7 +18,7 @@ impl ResourceCompiler {
         true
     }
 
-    pub fn compile_resource(&self, out_dir: &str, prefix: &str, resource: &str) {
+    pub fn compile_resource(&self, out_dir: &str, prefix: &str, resource: &str) -> String {
         let out_file = format!("{}/lib{}.a", out_dir, prefix);
         let target = if env::var("TARGET").expect("No TARGET env var").starts_with("x86_64") {
             "pe-x86-64" // Default for amd64 windres
@@ -33,6 +33,7 @@ impl ResourceCompiler {
             Ok(stat) => panic!("windres failed to compile \"{}\" into \"{}\" with {}", resource, out_file, stat),
             Err(e) => panic!("Couldn't to execute windres to compile \"{}\" into \"{}\": {}", resource, out_file, e),
         }
+        out_file
     }
 }
 
