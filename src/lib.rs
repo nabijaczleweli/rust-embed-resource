@@ -91,6 +91,7 @@
 
 #[cfg(any(not(target_os = "windows"), all(target_os = "windows", target_env = "msvc")))]
 extern crate cc;
+extern crate toml;
 #[cfg(all(target_os = "windows", target_env = "msvc"))]
 extern crate vswhom;
 #[cfg(all(target_os = "windows", target_env = "msvc"))]
@@ -111,8 +112,10 @@ use self::windows_msvc::*;
 #[cfg(all(target_os = "windows", not(target_env = "msvc")))]
 use self::windows_not_msvc::*;
 
-use std::env;
+use std::{env, fs};
 use std::fmt::Display;
+use toml::Value as TomlValue;
+use toml::map::Map as TomlMap;
 use std::path::{Path, PathBuf};
 
 
@@ -129,7 +132,8 @@ use std::path::{Path, PathBuf};
 /// Note that this does *nothing* if building with rustc before 1.50.0 and there's a library in the crate,
 /// since the resource is linked to the library, if any, instead of the binaries.
 ///
-/// Since rustc 1.50.0, the resource is linked only to the binaries.
+/// Since rustc 1.50.0, the resource is linked only to the binaries
+/// (unless there are none, in which case it's also linked to the library).
 ///
 /// # Examples
 ///
@@ -145,11 +149,26 @@ use std::path::{Path, PathBuf};
 /// ```
 pub fn compile<T: AsRef<Path>>(resource_file: T) {
     if let Some((prefix, out_dir, out_file)) = compile_impl(resource_file.as_ref()) {
-        if rustc_version::version().expect("couldn't get rustc version") >= rustc_version::Version::new(1, 50, 0) {
+        let hasbins = fs::read_to_string("Cargo.toml")
+            .unwrap_or_else(|err| {
+                eprintln!("Couldn't read Cargo.toml: {}; assuming src/main.rs or S_ISDIR(src/bin/)", err);
+                String::new()
+            })
+            .parse::<TomlValue>()
+            .unwrap_or_else(|err| {
+                eprintln!("Couldn't parse Cargo.toml: {}; assuming src/main.rs or S_ISDIR(src/bin/)", err);
+                TomlValue::Table(TomlMap::new())
+            })
+            .as_table()
+            .map(|t| t.contains_key("bin"))
+            .unwrap_or(false) || (Path::new("src/main.rs").exists() || Path::new("src/bin").is_dir());
+        eprintln!("Final verdict: crate has binaries: {}", hasbins);
+
+        if hasbins && rustc_version::version().expect("couldn't get rustc version") >= rustc_version::Version::new(1, 50, 0) {
             println!("cargo:rustc-link-arg-bins={}", out_file);
         } else {
             // Cargo pre-0.51.0 (rustc pre-1.50.0) compat
-            // Doesn't work when the calling crate has a library
+            // Only links to the calling crate's library
             println!("cargo:rustc-link-search=native={}", out_dir);
             println!("cargo:rustc-link-lib=dylib={}", prefix);
         }
