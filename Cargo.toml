@@ -10,7 +10,7 @@ license = "MIT"
 # Remember to also update in appveyor.yml
 # Remember to also update in src/lib.rs ~L40 (Cargo.toml example)
 # Remember to also update in README
-version = "1.6.6"
+version = "1.6.7"
 authors = ["наб <nabijaczleweli@nabijaczleweli.xyz>",
            "Cat Plus Plus <piotrlegnica@piotrl.pl>",
            "Liigo <liigo@qq.com>",
