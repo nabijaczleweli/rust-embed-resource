@@ -88,7 +88,7 @@ impl Compiler {
                     .unwrap();
 
                 try_command(Command::new(&self.executable[..])
-                                .args(&["/fo", &out_file, &preprocessed_path])
+                                .args(&["/fo", &out_file, "--", &preprocessed_path])
                                 .stdin(Stdio::piped())
                                 .current_dir(Path::new(resource).parent().expect("Resource parent nonexistent?")),
                             Path::new(&self.executable[..]),
