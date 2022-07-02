@@ -91,7 +91,7 @@ impl Compiler {
                 try_command(Command::new(&self.executable[..])
                                 .args(&["/fo", &out_file, "--", &preprocessed_path])
                                 .stdin(Stdio::piped())
-                                .current_dir(Path::new(resource).parent().expect("Resource parent nonexistent?")),
+                                .current_dir(or_curdir(Path::new(resource).parent().expect("Resource parent nonexistent?"))),
                             Path::new(&self.executable[..]),
                             "compile",
                             &preprocessed_path,
@@ -117,6 +117,14 @@ fn try_command(cmd: &mut Command, exec: &Path, action: &str, whom: &str, whre: &
         Ok(stat) if stat.success() => {}
         Ok(stat) => panic!("{} failed to {} \"{}\" into \"{}\" with {}", exec.display(), action, whom, whre, stat),
         Err(e) => panic!("Couldn't execute {} to {} \"{}\" into \"{}\": {}", exec.display(), action, whom, whre, e),
+    }
+}
+
+fn or_curdir(directory: &Path) -> &Path {
+    if directory == Path::new("") {
+        Path::new(".")
+    } else {
+        directory
     }
 }
 
