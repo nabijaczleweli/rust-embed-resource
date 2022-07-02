@@ -81,6 +81,7 @@ impl Compiler {
                 fs::write(&preprocessed_path,
                           cc::Build::new()
                               .define("RC_INVOKED", None)
+                              .flag("-xc")
                               .file(resource)
                               .cargo_metadata(false)
                               .include(out_dir)
