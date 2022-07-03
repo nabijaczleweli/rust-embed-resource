@@ -31,7 +31,7 @@ exclude = ["*.enc"]
 
 [dependencies]
 rustc_version = "0.4"
-toml = "0.5"
+toml = "=0.5.8"  # https://ci.appveyor.com/project/nabijaczleweli/rust-embed-resource/builds/44058177/job/xqpfqv6ic05g99r8#L96
 
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 cc = "1.0"
