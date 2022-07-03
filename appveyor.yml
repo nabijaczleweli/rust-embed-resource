@@ -1,4 +1,4 @@
-version: 1.6.8-{build}
+version: 1.6.9-{build}
 
 skip_tags: false
 
