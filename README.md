@@ -62,6 +62,18 @@ fn main() {
 
 5. Build your project!
 
+## Errata
+
+If no `cargo:rerun-if-changed` annotations are generated, Cargo scans the entire build root by default.
+Because the first step in building a manifest is an unspecified C preprocessor step with-out the ability to generate the equivalent of `cc -MD`, we do *not* output said annotation.
+
+If scanning is prohibitively expensive, or you have something else that generates the annotations, you may want to spec the full non-system dependency list for your manifest manually, so:
+```rust
+println!("cargo:rerun-if-changed=app-name-manifest.rc");
+embed_resource::compile("app-name-manifest.rc");
+```
+for the above example (cf. [#41](https://github.com/nabijaczleweli/rust-embed-resource/issues/41)).
+
 ## Credit
 
 In chronological order:
