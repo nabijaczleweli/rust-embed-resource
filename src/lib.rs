@@ -36,7 +36,7 @@
 //! build = "build.rs"
 //!
 //! [build-dependencies]
-//! embed-resource = "1.7"
+//! embed-resource = "1.8"
 //! ```
 //!
 //! In `build.rs`:
@@ -98,7 +98,7 @@
 //!
 //!   * ThePhD
 //!   * Embark Studios
-//!   * Jasper Bekkers
+//!   * Lars Strojny
 
 
 #[cfg(any(not(target_os = "windows"), all(target_os = "windows", target_env = "msvc")))]
