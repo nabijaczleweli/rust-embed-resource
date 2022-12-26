@@ -36,7 +36,7 @@
 //! build = "build.rs"
 //!
 //! [build-dependencies]
-//! embed-resource = "1.8"
+//! embed-resource = "2.0"
 //! ```
 //!
 //! In `build.rs`:
@@ -144,7 +144,7 @@ use std::path::{Path, PathBuf};
 /// Empty slice, properly-typed for `compile()` and `compile_for()`'s macro list.
 ///
 /// Rust helpfully forbids default type parameters on functions, so just passing `[]` doesn't work :)
-pub const NONE: &[&str] = &[];
+pub const NONE: &[&OsStr] = &[];
 
 
 /// Compile the Windows resource file and update the cargo search path if building for Windows.
