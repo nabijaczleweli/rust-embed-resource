@@ -45,21 +45,24 @@
 //! extern crate embed_resource;
 //!
 //! fn main() {
-//!     embed_resource::compile("checksums.rc");
+//!     embed_resource::compile("checksums.rc", embed_resource::NONE);  // or
+//!     embed_resource::compile("checksums.rc", ["VERSION=000901"]);
 //! }
 //! ```
 //!
 //! ## Errata
 //!
 //! If no `cargo:rerun-if-changed` annotations are generated, Cargo scans the entire build root by default.
-//! Because the first step in building a manifest is an unspecified C preprocessor step with-out the ability to generate the equivalent of `cc -MD`, we do *not* output said annotation.
+//! Because the first step in building a manifest is an unspecified C preprocessor step with-out the ability to generate the
+//! equivalent of `cc -MD`, we do *not* output said annotation.
 //!
-//! If scanning is prohibitively expensive, or you have something else that generates the annotations, you may want to spec the full non-system dependency list for your manifest manually, so:
+//! If scanning is prohibitively expensive, or you have something else that generates the annotations, you may want to spec the
+//! full non-system dependency list for your manifest manually, so:
 //! ```rust,no_run
 //! println!("cargo:rerun-if-changed=app-name-manifest.rc");
-//! embed_resource::compile("app-name-manifest.rc");
+//! embed_resource::compile("app-name-manifest.rc", embed_resource::NONE);
 //! ```
-//! for the above example (cf. [#41](https://github.com/nabijaczleweli/rust-embed-resource/issues/41)).
+//! for the above example (cf, [#41](https://github.com/nabijaczleweli/rust-embed-resource/issues/41)).
 //!
 //! # Cross-compilation
 //!
@@ -125,10 +128,18 @@ use self::windows_msvc::*;
 use self::windows_not_msvc::*;
 
 use std::{env, fs};
+use std::ffi::OsStr;
 use std::fmt::Display;
+use std::process::Command;
 use toml::Value as TomlValue;
 use toml::map::Map as TomlMap;
 use std::path::{Path, PathBuf};
+
+
+/// Empty slice, properly-typed for `compile()` and `compile_for()`'s macro list.
+///
+/// Rust helpfully forbids default type parameters on functions, so just passing `[]` doesn't work :)
+pub const NONE: &[&str] = &[];
 
 
 /// Compile the Windows resource file and update the cargo search path if building for Windows.
@@ -147,6 +158,8 @@ use std::path::{Path, PathBuf};
 /// Since rustc 1.50.0, the resource is linked only to the binaries
 /// (unless there are none, in which case it's also linked to the library).
 ///
+/// `macros` are a list of macros to define, in standard `NAME`/`NAME=VALUE` format.
+///
 /// # Examples
 ///
 /// In your build script, assuming the crate's name is "checksums":
@@ -156,11 +169,11 @@ use std::path::{Path, PathBuf};
 ///
 /// fn main() {
 ///     // Compile and link checksums.rc
-///     embed_resource::compile("checksums.rc");
+///     embed_resource::compile("checksums.rc", embed_resource::NONE);
 /// }
 /// ```
-pub fn compile<T: AsRef<Path>>(resource_file: T) {
-    if let Some((prefix, out_dir, out_file)) = compile_impl(resource_file.as_ref()) {
+pub fn compile<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) {
+    if let Some((prefix, out_dir, out_file)) = compile_impl(resource_file.as_ref(), macros) {
         let hasbins = fs::read_to_string("Cargo.toml")
             .unwrap_or_else(|err| {
                 eprintln!("Couldn't read Cargo.toml: {}; assuming src/main.rs or S_ISDIR(src/bin/)", err);
@@ -197,29 +210,38 @@ pub fn compile<T: AsRef<Path>>(resource_file: T) {
 /// extern crate embed_resource;
 ///
 /// fn main() {
-///     embed_resource::compile_for("assets/poke-a-mango.rc", &["poke-a-mango", "poke-a-mango-installer"]);
-///     embed_resource::compile_for("assets/uninstaller.rc", &["unins001"]);
+/// embed_resource::compile_for("assets/poke-a-mango.rc", &["poke-a-mango", "poke-a-mango-installer"],
+///                             ["VERSION=\"0.5.0\""]);
+///     embed_resource::compile_for("assets/uninstaller.rc", &["unins001"], embed_resource::NONE);
 /// }
 /// ```
-pub fn compile_for<T: AsRef<Path>, J: Display, I: IntoIterator<Item = J>>(resource_file: T, for_bins: I) {
-    if let Some((_, _, out_file)) = compile_impl(resource_file.as_ref()) {
+pub fn compile_for<T: AsRef<Path>, J: Display, I: IntoIterator<Item = J>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, for_bins: I,
+                                                                                                                         macros: Mi) {
+    if let Some((_, _, out_file)) = compile_impl(resource_file.as_ref(), macros) {
         for bin in for_bins {
             println!("cargo:rustc-link-arg-bin={}={}", bin, out_file);
         }
     }
 }
 
-fn compile_impl(resource_file: &Path) -> Option<(&str, String, String)> {
+fn compile_impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: &Path, macros: Mi) -> Option<(&str, String, String)> {
     let comp = ResourceCompiler::new();
     if comp.is_supported() {
         let prefix = &resource_file.file_stem().expect("resource_file has no stem").to_str().expect("resource_file's stem not UTF-8");
         let out_dir = env::var("OUT_DIR").expect("No OUT_DIR env var");
 
-        let out_file = comp.compile_resource(&out_dir, &prefix, resource_file.to_str().expect("resource_file not UTF-8"));
+        let out_file = comp.compile_resource(&out_dir, &prefix, resource_file.to_str().expect("resource_file not UTF-8"), macros);
         Some((prefix, out_dir, out_file))
     } else {
         None
     }
+}
+
+fn apply_macros<'t, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(to: &'t mut Command, pref: &str, macros: Mi) -> &'t mut Command {
+    for m in macros {
+        to.arg(pref).arg(m);
+    }
+    to
 }
 
 

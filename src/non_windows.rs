@@ -1,6 +1,8 @@
 use std::process::{Command, Stdio};
 use std::path::{PathBuf, Path};
+use self::super::apply_macros;
 use std::borrow::Cow;
+use std::ffi::OsStr;
 use std::{env, fs};
 
 
@@ -19,8 +21,8 @@ impl ResourceCompiler {
         self.compiler.is_some()
     }
 
-    pub fn compile_resource(&self, out_dir: &str, prefix: &str, resource: &str) -> String {
-        self.compiler.as_ref().expect("Not supported but we got to compile_resource()?").compile(out_dir, prefix, resource)
+    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi) -> String {
+        self.compiler.as_ref().expect("Not supported but we got to compile_resource()?").compile(out_dir, prefix, resource, macros)
     }
 }
 
@@ -72,15 +74,14 @@ impl Compiler {
         None
     }
 
-    pub fn compile(&self, out_dir: &str, prefix: &str, resource: &str) -> String {
+    pub fn compile<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi) -> String {
         match self.tp {
             CompilerType::LlvmRc => {
                 let out_file = format!("{}/{}.lib", out_dir, prefix);
 
                 let preprocessed_path = format!("{}/{}-preprocessed.rc", out_dir, prefix);
                 fs::write(&preprocessed_path,
-                          cc::Build::new()
-                              .define("RC_INVOKED", None)
+                          apply_macros_cc(cc::Build::new().define("RC_INVOKED", None), macros)
                               .flag("-xc")
                               .file(resource)
                               .cargo_metadata(false)
@@ -100,8 +101,10 @@ impl Compiler {
             }
             CompilerType::WindRes => {
                 let out_file = format!("{}/lib{}.a", out_dir, prefix);
-                try_command(Command::new(&self.executable[..])
-                                .args(&["--input", resource, "--output-format=coff", "--output", &out_file, "--include-dir", out_dir]),
+                try_command(apply_macros(Command::new(&self.executable[..])
+                                             .args(&["--input", resource, "--output-format=coff", "--output", &out_file, "--include-dir", out_dir]),
+                                         "-D",
+                                         macros),
                             Path::new(&self.executable[..]),
                             "compile",
                             resource,
@@ -110,6 +113,14 @@ impl Compiler {
             }
         }
     }
+}
+
+fn apply_macros_cc<'t, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(to: &'t mut cc::Build, macros: Mi) -> &'t mut cc::Build {
+    for m in macros {
+        let mut m = m.as_ref().to_str().expect("macros must be UTF-8 in this configuration").splitn(2, '=');
+        to.define(m.next().unwrap(), m.next());
+    }
+    to
 }
 
 fn try_command(cmd: &mut Command, exec: &Path, action: &str, whom: &str, whre: &str) {

@@ -1,3 +1,4 @@
+use self::super::apply_macros;
 use std::process::Command;
 use std::path::PathBuf;
 use std::borrow::Cow;
@@ -20,7 +21,7 @@ impl ResourceCompiler {
         true
     }
 
-    pub fn compile_resource(&self, out_dir: &str, prefix: &str, resource: &str) -> String {
+    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi) -> String {
         let out_file = format!("{}/lib{}.a", out_dir, prefix);
 
         // Under some msys2 environments, $MINGW_CHOST has the correct target for
@@ -34,10 +35,12 @@ impl ResourceCompiler {
                 .into()
         });
 
-        match Command::new("windres")
-            .args(&["--input", resource, "--output-format=coff", "--target"])
-            .arg(target)
-            .args(&["--output", &out_file, "--include-dir", out_dir])
+        match apply_macros(Command::new("windres")
+                               .args(&["--input", resource, "--output-format=coff", "--target"])
+                               .arg(target)
+                               .args(&["--output", &out_file, "--include-dir", out_dir]),
+                           "-D",
+                           macros)
             .status() {
             Ok(stat) if stat.success() => {}
             Ok(stat) => panic!("windres failed to compile \"{}\" into \"{}\" with {}", resource, out_file, stat),
