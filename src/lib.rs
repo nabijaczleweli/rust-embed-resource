@@ -46,7 +46,7 @@
 //!
 //! fn main() {
 //!     embed_resource::compile("checksums.rc", embed_resource::NONE);  // or
-//!     embed_resource::compile("checksums.rc", ["VERSION=000901"]);
+//!     embed_resource::compile("checksums.rc", &["VERSION=000901"]);
 //! }
 //! ```
 //!
@@ -216,7 +216,7 @@ pub fn compile<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(re
 ///
 /// fn main() {
 /// embed_resource::compile_for("assets/poke-a-mango.rc", &["poke-a-mango", "poke-a-mango-installer"],
-///                             ["VERSION=\"0.5.0\""]);
+///                             &["VERSION=\"0.5.0\""]);
 ///     embed_resource::compile_for("assets/uninstaller.rc", &["unins001"], embed_resource::NONE);
 /// }
 /// ```

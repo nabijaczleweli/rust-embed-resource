@@ -29,9 +29,10 @@ impl ResourceCompiler {
         let out_file = format!("{}/{}.lib", out_dir, prefix);
         // `.res`es are linkable under MSVC as well as normal libraries.
         if !apply_macros(Command::new(find_windows_sdk_tool_impl("rc.exe").as_ref().map_or(Path::new("rc.exe"), Path::new))
-                             .args(&["/fo", &out_file, "/I", out_dir, resource]),
+                             .args(&["/fo", &out_file, "/I", out_dir]),
                          "/D",
                          macros)
+            .arg(resource)
             .status()
             .expect("Are you sure you have RC.EXE in your $PATH?")
             .success() {
