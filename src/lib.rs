@@ -75,6 +75,11 @@
 //! preloaded with configuration from
 //! [`cc`](https://github.com/alexcrichton/cc-rs#external-configuration-via-environment-variables).
 //!
+//! ## Migration
+//! ### 2.x
+//!
+//! Add `embed_resource::NONE` as the last argument to `embed_resource::compile()` and  `embed_resource::compile_for()`.
+//!
 //! # Credit
 //!
 //! In chronological order:

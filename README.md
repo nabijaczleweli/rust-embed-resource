@@ -13,11 +13,11 @@ extern crate embed_resource;
 
 fn main() {
     // Compile and link checksums.rc
-    embed_resource::compile("checksums.rc");
+    embed_resource::compile("checksums.rc", embed_resource::NONE);
 
     // Or, to select a resource file for each binary separately
-    embed_resource::compile_for("assets/poke-a-mango.rc", &["poke-a-mango", "poke-a-mango-installer"]);
-    embed_resource::compile_for("assets/uninstaller.rc", &["unins001"]);
+    embed_resource::compile_for("assets/poke-a-mango.rc", &["poke-a-mango", "poke-a-mango-installer"], ["VERSION=\"0.5.0\""]);
+    embed_resource::compile_for("assets/uninstaller.rc", &["unins001"], embed_resource::NONE);
 }
 ```
 
@@ -36,7 +36,7 @@ embed-resource = "1.8"
 ```rust
 extern crate embed_resource;
 fn main() {
-    embed_resource::compile("app-name-manifest.rc");
+    embed_resource::compile("app-name-manifest.rc", embed_resource::NONE);
 }
 ```
 
@@ -70,9 +70,14 @@ Because the first step in building a manifest is an unspecified C preprocessor s
 If scanning is prohibitively expensive, or you have something else that generates the annotations, you may want to spec the full non-system dependency list for your manifest manually, so:
 ```rust
 println!("cargo:rerun-if-changed=app-name-manifest.rc");
-embed_resource::compile("app-name-manifest.rc");
+embed_resource::compile("app-name-manifest.rc", embed_resource::NONE);
 ```
 for the above example (cf. [#41](https://github.com/nabijaczleweli/rust-embed-resource/issues/41)).
+
+## Migration
+### 2.x
+
+Add `embed_resource::NONE` as the last argument to `embed_resource::compile()` and  `embed_resource::compile_for()`.
 
 ## Credit
 

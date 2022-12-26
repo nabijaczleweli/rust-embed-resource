@@ -5,6 +5,7 @@ use self::super::apply_macros;
 use std::process::Command;
 use vswhom::VsFindResult;
 use winreg::enums::*;
+use std::ffi::OsStr;
 use std::{env, fs};
 use winreg;
 
