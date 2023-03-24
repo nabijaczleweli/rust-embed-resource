@@ -52,7 +52,7 @@ impl Compiler {
             return Some(guess_compiler_variant(&rc));
         }
 
-        if target.ends_with("-pc-windows-gnu") {
+        if target.ends_with("-pc-windows-gnu") || target.ends_with("-pc-windows-gnullvm") {
             let executable = format!("{}-w64-mingw32-windres", &target[0..target.find('-').unwrap_or_default()]);
             if is_runnable(&executable) {
                 return Some(Compiler {
