@@ -205,7 +205,7 @@ pub fn compile<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(re
     }
 }
 
-/// Likewise, but only for select binaries.
+/// Like [`compile`], but only for select binaries.
 ///
 /// Only available since rustc 1.55.0, does nothing before.
 ///
