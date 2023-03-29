@@ -229,6 +229,33 @@ pub fn compile_for<T: AsRef<Path>, J: Display, I: IntoIterator<Item = J>, Ms: As
     }
 }
 
+/// Likewise, but only link the resource to test binaries.
+///
+/// Only available since rustc 1.60.0, does nothing before.
+pub fn compile_for_tests<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) {
+    if let Some((_, _, out_file)) = compile_impl(resource_file.as_ref(), macros) {
+        println!("cargo:rustc-link-arg-tests={}", out_file);
+    }
+}
+
+/// Likewise, but only link the resource to benchmarks.
+///
+/// Only available since rustc 1.60.0, does nothing before.
+pub fn compile_for_benchmarks<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) {
+    if let Some((_, _, out_file)) = compile_impl(resource_file.as_ref(), macros) {
+        println!("cargo:rustc-link-arg-benches={}", out_file);
+    }
+}
+
+/// Likewise, but only link the resource to examples.
+///
+/// Only available since rustc 1.60.0, does nothing before.
+pub fn compile_for_examples<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) {
+    if let Some((_, _, out_file)) = compile_impl(resource_file.as_ref(), macros) {
+        println!("cargo:rustc-link-arg-examples={}", out_file);
+    }
+}
+
 fn compile_impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: &Path, macros: Mi) -> Option<(&str, String, String)> {
     let comp = ResourceCompiler::new();
     if comp.is_supported() {
