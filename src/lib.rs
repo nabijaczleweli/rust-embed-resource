@@ -229,6 +229,66 @@ pub fn compile_for<T: AsRef<Path>, J: Display, I: IntoIterator<Item = J>, Ms: As
     }
 }
 
+/// Like [`compile`], but only for tests.
+///
+/// Only available since rustc 1.60.0, does nothing before.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// extern crate embed_resource;
+///
+/// fn main() {
+///     embed_resource::compile_for_tests("assets/poke-a-mango.rc", &["VERSION=\"0.5.0\""]);
+///     embed_resource::compile_for_tests("assets/uninstaller.rc", embed_resource::NONE);
+/// }
+/// ```
+pub fn compile_for_tests<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) {
+    if let Some((_, _, out_file)) = compile_impl(resource_file.as_ref(), macros) {
+        println!("cargo:rustc-link-arg-tests={}", out_file);
+    }
+}
+
+/// Like [`compile`], but only for benches.
+///
+/// Only available since rustc 1.60.0, does nothing before.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// extern crate embed_resource;
+///
+/// fn main() {
+///     embed_resource::compile_for_benches("assets/poke-a-mango.rc", &["VERSION=\"0.5.0\""]);
+///     embed_resource::compile_for_benches("assets/uninstaller.rc", embed_resource::NONE);
+/// }
+/// ```
+pub fn compile_for_benches<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) {
+    if let Some((_, _, out_file)) = compile_impl(resource_file.as_ref(), macros) {
+        println!("cargo:rustc-link-arg-benches={}", out_file);
+    }
+}
+
+/// Like [`compile`], but only for examples.
+///
+/// Only available since rustc 1.60.0, does nothing before.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// extern crate embed_resource;
+///
+/// fn main() {
+///     embed_resource::compile_for_examples("assets/poke-a-mango.rc", &["VERSION=\"0.5.0\""]);
+///     embed_resource::compile_for_examples("assets/uninstaller.rc", embed_resource::NONE);
+/// }
+/// ```
+pub fn compile_for_examples<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) {
+    if let Some((_, _, out_file)) = compile_impl(resource_file.as_ref(), macros) {
+        println!("cargo:rustc-link-arg-examples={}", out_file);
+    }
+}
+
 fn compile_impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: &Path, macros: Mi) -> Option<(&str, String, String)> {
     let comp = ResourceCompiler::new();
     if comp.is_supported() {
