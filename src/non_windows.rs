@@ -75,10 +75,9 @@ impl Compiler {
     }
 
     pub fn compile<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi) -> String {
+        let out_file = format!("{}/{}.lib", out_dir, prefix);
         match self.tp {
             CompilerType::LlvmRc => {
-                let out_file = format!("{}/{}.lib", out_dir, prefix);
-
                 let preprocessed_path = format!("{}/{}-preprocessed.rc", out_dir, prefix);
                 fs::write(&preprocessed_path,
                           apply_macros_cc(cc::Build::new().define("RC_INVOKED", None), macros)
@@ -97,10 +96,8 @@ impl Compiler {
                             "compile",
                             &preprocessed_path,
                             &out_file);
-                out_file
             }
             CompilerType::WindRes => {
-                let out_file = format!("{}/lib{}.a", out_dir, prefix);
                 try_command(apply_macros(Command::new(&self.executable[..])
                                              .args(&["--input", resource, "--output-format=coff", "--output", &out_file, "--include-dir", out_dir]),
                                          "-D",
@@ -109,9 +106,9 @@ impl Compiler {
                             "compile",
                             resource,
                             &out_file);
-                out_file
             }
         }
+        out_file
     }
 }
 

@@ -47,13 +47,14 @@ impl ResourceCompiler {
 enum Arch {
     X86,
     X64,
+    AArch64,
 }
 
 pub fn find_windows_sdk_tool_impl(tool: &str) -> Option<PathBuf> {
-    let arch = if env::var("TARGET").expect("No TARGET env var").starts_with("x86_64") {
-        Arch::X64
-    } else {
-        Arch::X86
+    let arch = match env::var("TARGET").expect("No TARGET env var").as_bytes() {
+        [b'x', b'8', b'6', b'_', b'6', b'4', ..] => Arch::X64, // "x86_64"
+        [b'a', b'a', b'r', b'c', b'h', b'6', b'4', ..] => Arch::AArch64, // "aarch64"
+        _ => Arch::X86,
     };
 
     find_windows_10_kits_tool("KitsRoot10", arch, tool)
@@ -76,7 +77,7 @@ fn find_with_vswhom(arch: Arch, tool: &str) -> Option<PathBuf> {
             root.pop();
             root.push("bin");
             root.push(ver);
-            try_bin_dir(root, "x86", "x64", arch)
+            try_bin_dir(root, "x86", "x64", "arm64", arch)
         })
         .and_then(|pb| try_tool(pb, tool))
         .or_else(move || {
@@ -85,7 +86,7 @@ fn find_with_vswhom(arch: Arch, tool: &str) -> Option<PathBuf> {
                 .and_then(|mut root| {
                     root.pop();
                     root.pop();
-                    try_bin_dir(root, "bin/x86", "bin/x64", arch)
+                    try_bin_dir(root, "bin/x86", "bin/x64", "bin/arm64", arch)
                 })
                 .and_then(|pb| try_tool(pb, tool))
         })
@@ -97,7 +98,7 @@ fn find_windows_kits_tool(key: &str, arch: Arch, tool: &str) -> Option<PathBuf> 
         .open_subkey_with_flags(r"SOFTWARE\Microsoft\Windows Kits\Installed Roots", KEY_QUERY_VALUE)
         .and_then(|reg_key| reg_key.get_value::<String, _>(key))
         .ok()
-        .and_then(|root_dir| try_bin_dir(root_dir, "bin/x86", "bin/x64", arch))
+        .and_then(|root_dir| try_bin_dir(root_dir, "bin/x86", "bin/x64", "bin/arm64", arch))
         .and_then(|pb| try_tool(pb, tool))
 }
 
@@ -107,7 +108,7 @@ fn find_latest_windows_sdk_tool(arch: Arch, tool: &str) -> Option<PathBuf> {
         .open_subkey_with_flags(r"SOFTWARE\Microsoft\Microsoft SDKs\Windows", KEY_QUERY_VALUE)
         .and_then(|reg_key| reg_key.get_value::<String, _>("CurrentInstallFolder"))
         .ok()
-        .and_then(|root_dir| try_bin_dir(root_dir, "Bin", "Bin/x64", arch))
+        .and_then(|root_dir| try_bin_dir(root_dir, "Bin", "Bin/x64", "Bin/arm64", arch))
         .and_then(|pb| try_tool(pb, tool))
 }
 
@@ -128,7 +129,12 @@ fn find_windows_10_kits_tool(key: &str, arch: Arch, tool: &str) -> Option<PathBu
         }
 
         let fname = entry.file_name().into_string().unwrap();
-        if let Some(rc) = try_bin_dir(root_dir.clone(), &format!("{}/x86", fname), &format!("{}/x64", fname), arch).and_then(|pb| try_tool(pb, tool)) {
+        if let Some(rc) = try_bin_dir(root_dir.clone(),
+                                      &format!("{}/x86", fname),
+                                      &format!("{}/x64", fname),
+                                      &format!("{}/arm64", fname),
+                                      arch)
+            .and_then(|pb| try_tool(pb, tool)) {
             return Some(rc);
         }
     }
@@ -174,14 +180,15 @@ fn get_dirs(read_dir: fs::ReadDir) -> impl Iterator<Item = fs::DirEntry> {
     read_dir.filter_map(|dir| dir.ok()).filter(|dir| dir.file_type().map(|ft| ft.is_dir()).unwrap_or(false))
 }
 
-fn try_bin_dir<R: Into<PathBuf>>(root_dir: R, x86_bin: &str, x64_bin: &str, arch: Arch) -> Option<PathBuf> {
-    try_bin_dir_impl(root_dir.into(), x86_bin, x64_bin, arch)
+fn try_bin_dir<R: Into<PathBuf>>(root_dir: R, x86_bin: &str, x64_bin: &str, aarch64_bin: &str, arch: Arch) -> Option<PathBuf> {
+    try_bin_dir_impl(root_dir.into(), x86_bin, x64_bin, aarch64_bin, arch)
 }
 
-fn try_bin_dir_impl(mut root_dir: PathBuf, x86_bin: &str, x64_bin: &str, arch: Arch) -> Option<PathBuf> {
+fn try_bin_dir_impl(mut root_dir: PathBuf, x86_bin: &str, x64_bin: &str, aarch64_bin: &str, arch: Arch) -> Option<PathBuf> {
     match arch {
         Arch::X86 => root_dir.push(x86_bin),
         Arch::X64 => root_dir.push(x64_bin),
+        Arch::AArch64 => root_dir.push(aarch64_bin),
     }
 
     if root_dir.is_dir() {

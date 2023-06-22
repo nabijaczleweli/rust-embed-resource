@@ -27,10 +27,12 @@ impl ResourceCompiler {
         // Under some msys2 environments, $MINGW_CHOST has the correct target for
         // GNU windres or llvm-windres (clang32, clang64, or clangarm64)
         let target = env::var_os("MINGW_CHOST").map(Cow::Owned).unwrap_or_else(|| {
-            OsStr::new(if env::var("TARGET").expect("No TARGET env var").starts_with("x86_64") {
-                    "pe-x86-64" // Default for amd64 windres
-                } else {
-                    "pe-i386" // This is wrong for ARM Windows, but I couldn't find a triple for it (if it exists at all)
+            OsStr::new(match env::var("TARGET").expect("No TARGET env var").as_bytes() {
+                    [b'x', b'8', b'6', b'_', b'6', b'4', ..] => "pe-x86-64", // "x86_64"
+                    [b'a', b'a', b'r', b'c', b'h', b'6', b'4', ..] => "pe-aarch64-little", // "aarch64"
+                    // windres has "pe-aarch64-little" in the strings but doesn't actually accept it on my machine,
+                    // llvm-windres only has i686 and amd64; still unported
+                    _ => "pe-i386",
                 })
                 .into()
         });
