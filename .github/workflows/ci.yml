@@ -1,0 +1,39 @@
+on: [push, pull_request]
+
+name: CI
+
+env:
+  SCCACHE_GHA_ENABLED: "true"
+  RUSTC_WRAPPER: "sccache"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  msvc:
+    name: MSVC
+    strategy:
+      fail-fast: false
+      matrix:
+        rust_version: [stable, 1.63.0]
+        target:
+          - x86_64-pc-windows-msvc
+          - aarch64-pc-windows-msvc
+
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust_version }}
+          targets: ${{ matrix.target }}
+      - uses: mozilla-actions/sccache-action@v0.0.3
+        with:
+          version: v0.4.2
+
+      - run: cargo build --verbose --release --target ${{ matrix.target }}
+      - if: contains(matrix.target, 'x86')
+        run: cargo test --verbose --release
+      - if: contains(matrix.target, 'x86')
+        run: cargo run --verbose --release -- empty-resource.rc
