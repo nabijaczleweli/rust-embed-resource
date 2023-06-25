@@ -14,11 +14,11 @@ environment:
       TOOLCHAIN: stable
     - TARGET: x86_64-pc-windows-gnu
       MINGW: true
-      TOOLCHAIN: 1.63.0
+      TOOLCHAIN: 1.64.0
     - TARGET: x86_64-pc-windows-msvc
       TOOLCHAIN: stable
     - TARGET: x86_64-pc-windows-msvc
-      TOOLCHAIN: 1.63.0
+      TOOLCHAIN: 1.64.0
 
 install:
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
@@ -31,7 +31,7 @@ install:
 
 build: off
 build_script:
-  - cargo build --verbose --release
+  - cargo build --verbose --release --workspace
 
 test: off
 test_script:

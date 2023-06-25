@@ -1,0 +1,20 @@
+// https://learn.microsoft.com/en-us/windows/win32/menurc/versioninfo-resource
+1 VERSIONINFO
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        // Polish, Unicode
+        BLOCK "080904B0"
+        BEGIN
+            // Strings must match test.py
+            VALUE "CompanyName", "nabijaczleweli\0"
+            VALUE "ProductName", "rust-embed-resource/example/version\0"
+            VALUE "ProductVersion", "2.1.1\0"
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0809, 1200
+    END
+END
