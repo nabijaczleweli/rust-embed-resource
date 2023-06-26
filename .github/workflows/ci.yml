@@ -15,7 +15,7 @@ jobs:
         rust_version: [stable, 1.64.0]
         target:
           - x86_64-pc-windows-msvc
-          - x86-pc-windows-msvc
+          - i686-pc-windows-msvc
           - aarch64-pc-windows-msvc
 
     runs-on: windows-latest
@@ -26,9 +26,17 @@ jobs:
           toolchain: ${{ matrix.rust_version }}
           targets: ${{ matrix.target }}
 
+      - run: pip install "pefile==2023.2.7"
       - run: cargo build --verbose --release --target ${{ matrix.target }}
-      - if: contains(matrix.target, 'x86')
-        run: cargo test --verbose --release
-      - if: contains(matrix.target, 'x86')
-        run: cargo run --verbose --release -- empty-resource.rc
-      - run: cd example/version/; cargo build --target ${{ matrix.target }}
+
+      # runner is x86_64, can only run i686 and x86_64
+      - if: contains(matrix.target, '86')
+        run: cargo test --verbose --release --target ${{ matrix.target }}
+      - if: contains(matrix.target, '86')
+        run: cargo run --verbose --release --target ${{ matrix.target }} -- empty-resource.rc
+
+      # Embed resources into a cross-compiled binary, and check.
+      - run: |
+          cd example/version/ && \
+          cargo build --release --target "${{ matrix.target }}" && \
+          python test.py "target/${{ matrix.target }}/release/embed-resource-example-version.exe"
