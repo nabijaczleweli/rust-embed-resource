@@ -17,6 +17,8 @@ fn main() {
                  } else {
                      "irrelevant"
                  });
+    #[cfg(target_os = "windows")]
+    env::set_var("HOST", env::var_os("TARGET").unwrap());
 
     env::set_var("OUT_DIR", ".");
 

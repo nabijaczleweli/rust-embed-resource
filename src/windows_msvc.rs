@@ -51,7 +51,7 @@ enum Arch {
 }
 
 pub fn find_windows_sdk_tool_impl(tool: &str) -> Option<PathBuf> {
-    let arch = match env::var("TARGET").expect("No TARGET env var").as_bytes() {
+    let arch = match env::var("HOST").expect("No HOST env var").as_bytes() {
         [b'x', b'8', b'6', b'_', b'6', b'4', ..] => Arch::X64, // "x86_64"
         [b'a', b'a', b'r', b'c', b'h', b'6', b'4', ..] => Arch::AArch64, // "aarch64"
         _ => Arch::X86,
