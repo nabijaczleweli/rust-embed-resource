@@ -1,5 +1,7 @@
-// VERSIONINFO reference: https://learn.microsoft.com/en-us/windows/win32/menurc/versioninfo-resource
-VS_VERSION_INFO VERSIONINFO
+// VERSIONINFO references:
+//   https://learn.microsoft.com/en-us/windows/win32/menurc/versioninfo-resource
+//   https://stackoverflow.com/a/70246116
+1 VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
