@@ -29,14 +29,14 @@ jobs:
       - run: pip install "pefile==2023.2.7"
       - run: cargo build --verbose --release --target ${{ matrix.target }}
 
-      # runner is x86_64, can only run i686 and x86_64
+      # Runner is x86_64, can only run i686 and x86_64
       - if: contains(matrix.target, '86')
         run: cargo test --verbose --release --target ${{ matrix.target }}
       - if: contains(matrix.target, '86')
         run: cargo run --verbose --release --target ${{ matrix.target }} -- empty-resource.rc
 
       # Embed resources into a cross-compiled binary, and check.
-      - run: |
-          cd example/version/ && \
-          cargo build --release --target "${{ matrix.target }}" && \
-          python test.py "target/${{ matrix.target }}/release/embed-resource-example-version.exe"
+      - run: cargo build --release --target "${{ matrix.target }}" --manifest-path "example/version/Cargo.toml"
+      - run: python example/version/test.py "example/version/target/${{ matrix.target }}/release/embed-resource-example-version.exe"
+      - if: contains(matrix.target, '86')
+        run: "example/version/target/${{ matrix.target }}/release/embed-resource-example-version.exe"
