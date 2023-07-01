@@ -1,0 +1,11 @@
+[package]
+name = "embed-resource-msvc-test"
+version = "0.0.0"
+build = "build.rs"
+
+[[bin]]
+name = "embed-resource-msvc-test"
+path = "main.rs"
+
+[build-dependencies]
+embed-resource.path = "../../.."

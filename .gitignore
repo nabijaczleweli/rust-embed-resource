@@ -12,7 +12,5 @@
 !*.md
 !.github
 !.github/**
-!example/
-!example/**
 !src
 !src/**
