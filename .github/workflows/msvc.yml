@@ -36,6 +36,6 @@ jobs:
         run: cargo run --verbose --release --target ${{ matrix.target }} -- empty-resource.rc
 
       # Embed resources into a cross-compiled binary, and check.
-      - run: python3 .github/workflows/msvc/test.py ".github/workflows/msvc/target/${{ matrix.target }}/release/embed-resource-msvc-test.exe"
+      - run: python3 .github/workflows/msvc/test.py "target/${{ matrix.target }}/release/embed-resource-msvc-test.exe"
       - if: contains(matrix.target, '86')
-        run: ".github/workflows/msvc/target/${{ matrix.target }}/release/embed-resource-msvc-test.exe"
+        run: "target/${{ matrix.target }}/release/embed-resource-msvc-test.exe"
