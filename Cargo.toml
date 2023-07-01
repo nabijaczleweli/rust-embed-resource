@@ -46,3 +46,8 @@ vswhom = "0.1"
 [target.'cfg(all(target_os = "windows", target_env = "msvc"))'.dependencies.winreg]
 version = "0.11"
 default-features = false
+
+
+
+[workspace]
+members = [".github/workflows/msvc"]
