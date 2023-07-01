@@ -1,12 +1,10 @@
-// VERSIONINFO references:
-//   https://learn.microsoft.com/en-us/windows/win32/menurc/versioninfo-resource
-//   https://stackoverflow.com/a/70246116
+// https://learn.microsoft.com/en-us/windows/win32/menurc/versioninfo-resource
 1 VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        // English (US), code page 1252
-        BLOCK "040904E4"
+        // Polish, Unicode
+        BLOCK "080904B0"
         BEGIN
             // Strings must match test.py
             VALUE "CompanyName", "nabijaczleweli\0"
@@ -17,6 +15,6 @@ BEGIN
 
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0x409, 1252
+        VALUE "Translation", 0x0809, 1200
     END
 END
