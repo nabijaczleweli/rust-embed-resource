@@ -36,7 +36,7 @@
 //! build = "build.rs"
 //!
 //! [build-dependencies]
-//! embed-resource = "2.1"
+//! embed-resource = "2.2"
 //! ```
 //!
 //! In `build.rs`:
@@ -107,6 +107,7 @@
 //!   * ThePhD
 //!   * Embark Studios
 //!   * Lars Strojny
+//!   * EvModder
 
 
 #[cfg(any(not(target_os = "windows"), all(target_os = "windows", target_env = "msvc")))]

@@ -29,7 +29,7 @@ The following steps are used to embed a manifest in your compiled rust .exe file
 1. Add the following to your cargo.toml:
 ```toml
 [build-dependencies]
-embed-resource = "2.1"
+embed-resource = "2.2"
 ```
 
 2. In your project root directory, add a file named `build.rs` with the following:
@@ -106,3 +106,4 @@ To all who support further development on Patreon, in particular:
   * ThePhD
   * Embark Studios
   * Lars Strojny
+  * EvModder
