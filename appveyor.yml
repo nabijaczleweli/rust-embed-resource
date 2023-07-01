@@ -31,7 +31,7 @@ install:
 
 build: off
 build_script:
-  - cargo build --verbose --release
+  - cargo build --verbose --release --workspace
 
 test: off
 test_script:
