@@ -7,4 +7,4 @@ fi_strings = pe.FileInfo[0][0].StringTable[0].entries
 
 # must match version.rc
 print(f"version strings: {fi_strings}")
-assert fi_strings == {b"CompanyName": b"nabijaczleweli", b"ProductName": b"rust-embed-resource/example/version", b"ProductVersion": b"2.3.0"}
+assert fi_strings == {b"CompanyName": b"nabijaczleweli", b"ProductName": b"rust-embed-resource/example/version", b"ProductVersion": b"2.4.1"}
