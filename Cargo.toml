@@ -38,6 +38,7 @@ exclude = ["*.enc"]
 
 
 [dependencies]
+memchr = "2.7.1"
 rustc_version = "0.4"
 toml = "0.8"
 
