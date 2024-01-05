@@ -42,6 +42,7 @@ rustc_version = "0.4"
 toml = "0.8"
 
 [target.'cfg(not(target_os = "windows"))'.dependencies]
+memchr = "2.7"
 cc = "1.0"
 
 [target.'cfg(all(target_os = "windows", target_env = "msvc"))'.dependencies]

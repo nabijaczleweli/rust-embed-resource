@@ -3,6 +3,7 @@ use std::path::{PathBuf, Path};
 use self::super::apply_macros;
 use std::borrow::Cow;
 use std::ffi::OsStr;
+use memchr::memmem;
 use std::{env, fs};
 
 
@@ -32,7 +33,7 @@ enum CompilerType {
     /// LLVM-RC
     ///
     /// Requires a separate C preprocessor step on the source RC file
-    LlvmRc,
+    LlvmRc { has_no_preprocess: bool, },
     /// MinGW windres
     WindRes,
 }
@@ -65,7 +66,14 @@ impl Compiler {
         } else if target.ends_with("-pc-windows-msvc") {
             if is_runnable("llvm-rc") {
                 return Some(Compiler {
-                    tp: CompilerType::LlvmRc,
+                    tp: CompilerType::LlvmRc {
+                        has_no_preprocess: Command::new("llvm-rc")
+                            .arg("/?")
+                            .output()
+                            .ok()
+                            .map(|out| memmem::find(&out.stdout, b"no-preprocess").is_some())
+                            .unwrap_or(false),
+                    },
                     executable: "llvm-rc".into(),
                 });
             }
@@ -77,7 +85,7 @@ impl Compiler {
     pub fn compile<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi) -> String {
         let out_file = format!("{}/{}.lib", out_dir, prefix);
         match self.tp {
-            CompilerType::LlvmRc => {
+            CompilerType::LlvmRc { has_no_preprocess } => {
                 let preprocessed_path = format!("{}/{}-preprocessed.rc", out_dir, prefix);
                 fs::write(&preprocessed_path,
                           apply_macros_cc(cc::Build::new().define("RC_INVOKED", None), macros)
@@ -89,7 +97,16 @@ impl Compiler {
                     .unwrap();
 
                 try_command(Command::new(&self.executable[..])
-                                .args(&["/fo", &out_file, "--", &preprocessed_path])
+                                .args(&["/fo", &out_file])
+                                .args(if has_no_preprocess {
+                                    // We already preprocessed using CC. llvm-rc preprocessing
+                                    // requires having clang in PATH, which more exotic toolchains
+                                    // may not necessarily have.
+                                    &["/no-preprocess"][..]
+                                } else {
+                                    &[][..]
+                                })
+                                .args(&["--", &preprocessed_path])
                                 .stdin(Stdio::piped())
                                 .current_dir(or_curdir(Path::new(resource).parent().expect("Resource parent nonexistent?"))),
                             Path::new(&self.executable[..]),
@@ -150,7 +167,7 @@ fn guess_compiler_variant(s: &str) -> Compiler {
             } else if out.stdout.starts_with(b"OVERVIEW: Resource Converter") || out.stdout.starts_with(b"OVERVIEW: LLVM Resource Converter") {
                 Compiler {
                     executable: s.to_string().into(),
-                    tp: CompilerType::LlvmRc,
+                    tp: CompilerType::LlvmRc { has_no_preprocess: memmem::find(&out.stdout, b"no-preprocess").is_some() },
                 }
             } else {
                 panic!("Unknown RC compiler variant: {}", s)

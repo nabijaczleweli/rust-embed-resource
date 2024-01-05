@@ -112,12 +112,14 @@
 
 #[cfg(any(not(target_os = "windows"), all(target_os = "windows", target_env = "msvc")))]
 extern crate cc;
-extern crate toml;
+#[cfg(not(target_os = "windows"))]
+extern crate memchr;
 #[cfg(all(target_os = "windows", target_env = "msvc"))]
 extern crate vswhom;
 #[cfg(all(target_os = "windows", target_env = "msvc"))]
 extern crate winreg;
 extern crate rustc_version;
+extern crate toml;
 
 #[cfg(not(target_os = "windows"))]
 mod non_windows;
