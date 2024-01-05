@@ -139,7 +139,7 @@ fn guess_compiler_variant(s: &str) -> Compiler {
                     executable: s.to_string().into(),
                     tp: CompilerType::WindRes,
                 }
-            } else if out.stdout.starts_with(b"OVERVIEW: Resource Converter") {
+            } else if out.stdout.starts_with(b"OVERVIEW: Resource Converter") || out.stdout.starts_with(b"OVERVIEW: LLVM Resource Converter") {
                 Compiler {
                     executable: s.to_string().into(),
                     tp: CompilerType::LlvmRc,
