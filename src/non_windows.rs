@@ -88,8 +88,7 @@ impl Compiler {
             CompilerType::LlvmRc { has_no_preprocess } => {
                 let preprocessed_path = format!("{}/{}-preprocessed.rc", out_dir, prefix);
                 fs::write(&preprocessed_path,
-                          apply_macros_cc(cc::Build::new().define("RC_INVOKED", None), macros)
-                              .flag("-xc")
+                          cc_xc(apply_macros_cc(cc::Build::new().define("RC_INVOKED", None), macros))
                               .file(resource)
                               .cargo_metadata(false)
                               .include(out_dir)
@@ -134,6 +133,14 @@ fn apply_macros_cc<'t, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(to: &'t mu
         let mut m = m.as_ref().to_str().expect("macros must be UTF-8 in this configuration").splitn(2, '=');
         to.define(m.next().unwrap(), m.next());
     }
+    to
+}
+
+fn cc_xc(to: &mut cc::Build) -> &mut cc::Build {
+    if to.get_compiler().is_like_msvc() {  // clang-cl
+        to.flag("-Xclang");
+    }
+    to.flag("-xc");
     to
 }
 
