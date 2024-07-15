@@ -86,9 +86,7 @@ impl Compiler {
                 let out_file = format!("{}/{}.lib", out_dir, prefix);
                 let preprocessed_path = format!("{}/{}-preprocessed.rc", out_dir, prefix);
                 fs::write(&preprocessed_path,
-                          cc::Build::new()
-                              .define("RC_INVOKED", None)
-                              .flag("-xc")
+                          cc_xc(cc::Build::new().define("RC_INVOKED", None))
                               .file(resource)
                               .cargo_metadata(false)
                               .include(out_dir)
@@ -126,6 +124,14 @@ impl Compiler {
             }
         }
     }
+}
+
+fn cc_xc(to: &mut cc::Build) -> &mut cc::Build {
+    if to.get_compiler().is_like_msvc() {  // clang-cl
+        to.flag("-Xclang");
+    }
+    to.flag("-xc");
+    to
 }
 
 fn try_command(cmd: &mut Command, exec: &Path, action: &str, whom: &str, whre: &str) {
