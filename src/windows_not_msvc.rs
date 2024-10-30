@@ -17,7 +17,7 @@ impl ResourceCompiler {
     }
 
     #[inline(always)]
-    pub fn is_supported(&self) -> Option<Cow<'static, str>> {
+    pub fn is_supported(&mut self) -> Option<Cow<'static, str>> {
         None
     }
 

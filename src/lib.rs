@@ -353,7 +353,7 @@ pub fn compile_for_everything<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator
 }
 
 fn compile_impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: &Path, macros: Mi) -> Result<(&str, String, String), CompilationResult> {
-    let comp = ResourceCompiler::new();
+    let mut comp = ResourceCompiler::new();
     if let Some(missing) = comp.is_supported() {
         if missing.is_empty() {
             Err(CompilationResult::NotWindows)

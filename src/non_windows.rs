@@ -1,10 +1,10 @@
 use std::process::{Command, Stdio};
 use std::path::{PathBuf, Path};
 use self::super::apply_macros;
+use std::{env, fs, mem};
 use std::borrow::Cow;
 use std::ffi::OsStr;
 use memchr::memmem;
-use std::{env, fs};
 
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -18,8 +18,14 @@ impl ResourceCompiler {
     }
 
     #[inline]
-    pub fn is_supported(&self) -> Option<Cow<'static, str>> {
-        self.compiler.err()
+    pub fn is_supported(&mut self) -> Option<Cow<'static, str>> {
+        match mem::replace(&mut self.compiler, Err("".into())) {
+            Ok(c) => {
+                self.compiler = Ok(c);
+                None
+            }
+            Err(e) => Some(e),
+        }
     }
 
     pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi)
@@ -47,7 +53,7 @@ struct Compiler {
 
 impl Compiler {
     pub fn probe() -> Result<Compiler, Cow<'static, str>> {
-        let target = env::var("TARGET").map_err(|_| "no $TARGET".into())?;
+        let target = env::var("TARGET").map_err(|_| Cow::from("no $TARGET"))?;
 
         if let Some(rc) = env::var(&format!("RC_{}", target))
             .or_else(|_| env::var(&format!("RC_{}", target.replace('-', "_"))))
@@ -68,7 +74,7 @@ impl Compiler {
             }
         } else if target.ends_with("-pc-windows-msvc") {
             if is_runnable("llvm-rc") {
-                return Some(Compiler {
+                return Ok(Compiler {
                     tp: CompilerType::LlvmRc {
                         has_no_preprocess: Command::new("llvm-rc")
                             .arg("/?")
@@ -87,7 +93,8 @@ impl Compiler {
         Err("".into())
     }
 
-    pub fn compile<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi) -> String {
+    pub fn compile<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi)
+                                                                  -> Result<String, Cow<'static, str>> {
         let out_file = format!("{}/{}.lib", out_dir, prefix);
         match self.tp {
             CompilerType::LlvmRc { has_no_preprocess } => {
@@ -97,8 +104,7 @@ impl Compiler {
                               .file(resource)
                               .cargo_metadata(false)
                               .include(out_dir)
-                              .expand())
-                    .unwrap();
+                              .expand()).map_err(|e| e.to_string())?;
 
                 try_command(Command::new(&self.executable[..])
                                 .args(&["/fo", &out_file])
@@ -116,7 +122,7 @@ impl Compiler {
                             Path::new(&self.executable[..]),
                             "compile",
                             &preprocessed_path,
-                            &out_file);
+                            &out_file)?;
             }
             CompilerType::WindRes => {
                 try_command(apply_macros(Command::new(&self.executable[..])
@@ -126,10 +132,10 @@ impl Compiler {
                             Path::new(&self.executable[..]),
                             "compile",
                             resource,
-                            &out_file);
+                            &out_file)?;
             }
         }
-        out_file
+        Ok(out_file)
     }
 }
 
@@ -150,11 +156,11 @@ fn cc_xc(to: &mut cc::Build) -> &mut cc::Build {
     to
 }
 
-fn try_command(cmd: &mut Command, exec: &Path, action: &str, whom: &str, whre: &str) {
+fn try_command(cmd: &mut Command, exec: &Path, action: &str, whom: &str, whre: &str) -> Result<(), Cow<'static, str>> {
     match cmd.status() {
-        Ok(stat) if stat.success() => {}
-        Ok(stat) => panic!("{} failed to {} \"{}\" into \"{}\" with {}", exec.display(), action, whom, whre, stat),
-        Err(e) => panic!("Couldn't execute {} to {} \"{}\" into \"{}\": {}", exec.display(), action, whom, whre, e),
+        Ok(stat) if stat.success() => Ok(()),
+        Ok(stat) => Err(format!("{} failed to {} \"{}\" into \"{}\" with {}", exec.display(), action, whom, whre, stat).into()),
+        Err(e) => Err(format!("Couldn't execute {} to {} \"{}\" into \"{}\": {}", exec.display(), action, whom, whre, e).into()),
     }
 }
 
