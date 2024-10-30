@@ -36,7 +36,7 @@ impl ResourceCompiler {
                          macros)
             .arg(resource)
             .status()
-            .map_err(|_| "Are you sure you have RC.EXE in your $PATH?".into())?
+            .map_err(|_| Cow::from("Are you sure you have RC.EXE in your $PATH?"))?
             .success() {
             return Err("RC.EXE failed to compile specified resource file".into());
         }
