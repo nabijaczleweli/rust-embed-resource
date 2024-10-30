@@ -9,7 +9,7 @@ use std::{env, fs};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ResourceCompiler {
-    compiler: Option<Compiler>,
+    compiler: Result<Compiler, Cow<'static, str>>,
 }
 
 impl ResourceCompiler {
@@ -18,11 +18,12 @@ impl ResourceCompiler {
     }
 
     #[inline]
-    pub fn is_supported(&self) -> bool {
-        self.compiler.is_some()
+    pub fn is_supported(&self) -> Option<Cow<'static, str>> {
+        self.compiler.err()
     }
 
-    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi) -> String {
+    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi)
+                                                                           -> Result<String, Cow<'static, str>> {
         self.compiler.as_ref().expect("Not supported but we got to compile_resource()?").compile(out_dir, prefix, resource, macros)
     }
 }
@@ -45,23 +46,25 @@ struct Compiler {
 }
 
 impl Compiler {
-    pub fn probe() -> Option<Compiler> {
-        let target = env::var("TARGET").ok()?;
+    pub fn probe() -> Result<Compiler, Cow<'static, str>> {
+        let target = env::var("TARGET").map_err(|_| "no $TARGET".into())?;
 
         if let Some(rc) = env::var(&format!("RC_{}", target))
             .or_else(|_| env::var(&format!("RC_{}", target.replace('-', "_"))))
             .or_else(|_| env::var("RC"))
             .ok() {
-            return Some(guess_compiler_variant(&rc));
+            return guess_compiler_variant(&rc);
         }
 
         if target.ends_with("-pc-windows-gnu") || target.ends_with("-pc-windows-gnullvm") {
             let executable = format!("{}-w64-mingw32-windres", &target[0..target.find('-').unwrap_or_default()]);
             if is_runnable(&executable) {
-                return Some(Compiler {
+                return Ok(Compiler {
                     tp: CompilerType::WindRes,
                     executable: executable.into(),
                 });
+            } else {
+                return Err(executable.into());
             }
         } else if target.ends_with("-pc-windows-msvc") {
             if is_runnable("llvm-rc") {
@@ -76,10 +79,12 @@ impl Compiler {
                     },
                     executable: "llvm-rc".into(),
                 });
+            } else {
+                return Err("llvm-rc".into());
             }
         }
 
-        None
+        Err("".into())
     }
 
     pub fn compile<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi) -> String {
@@ -137,7 +142,8 @@ fn apply_macros_cc<'t, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(to: &'t mu
 }
 
 fn cc_xc(to: &mut cc::Build) -> &mut cc::Build {
-    if to.get_compiler().is_like_msvc() {  // clang-cl
+    if to.get_compiler().is_like_msvc() {
+        // clang-cl
         to.flag("-Xclang");
     }
     to.flag("-xc");
@@ -163,24 +169,24 @@ fn or_curdir(directory: &Path) -> &Path {
 /// -V will print the version in windres.
 /// /? will print the help in LLVM-RC and Microsoft RC.EXE.
 /// If combined, /? takes precedence over -V.
-fn guess_compiler_variant(s: &str) -> Compiler {
+fn guess_compiler_variant(s: &str) -> Result<Compiler, Cow<'static, str>> {
     match Command::new(s).args(&["-V", "/?"]).output() {
         Ok(out) => {
             if out.stdout.starts_with(b"GNU windres") {
-                Compiler {
+                Ok(Compiler {
                     executable: s.to_string().into(),
                     tp: CompilerType::WindRes,
-                }
+                })
             } else if out.stdout.starts_with(b"OVERVIEW: Resource Converter") || out.stdout.starts_with(b"OVERVIEW: LLVM Resource Converter") {
-                Compiler {
+                Ok(Compiler {
                     executable: s.to_string().into(),
                     tp: CompilerType::LlvmRc { has_no_preprocess: memmem::find(&out.stdout, b"no-preprocess").is_some() },
-                }
+                })
             } else {
-                panic!("Unknown RC compiler variant: {}", s)
+                Err(format!("Unknown RC compiler variant: {}", s).into())
             }
         }
-        Err(err) => panic!("Couldn't execute {}: {}", s, err),
+        Err(err) => Err(format!("Couldn't execute {}: {}", s, err).into()),
     }
 }
 

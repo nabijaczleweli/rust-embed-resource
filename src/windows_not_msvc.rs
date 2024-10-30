@@ -17,11 +17,12 @@ impl ResourceCompiler {
     }
 
     #[inline(always)]
-    pub fn is_supported(&self) -> bool {
-        true
+    pub fn is_supported(&self) -> Option<Cow<'static, str>> {
+        None
     }
 
-    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi) -> String {
+    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi)
+                                                                           -> Result<String, Cow<'static, str>> {
         let out_file = format!("{}/lib{}.a", out_dir, prefix);
 
         // Under some msys2 environments, $MINGW_CHOST has the correct target for
@@ -44,11 +45,10 @@ impl ResourceCompiler {
                            "-D",
                            macros)
             .status() {
-            Ok(stat) if stat.success() => {}
-            Ok(stat) => panic!("windres failed to compile \"{}\" into \"{}\" with {}", resource, out_file, stat),
-            Err(e) => panic!("Couldn't to execute windres to compile \"{}\" into \"{}\": {}", resource, out_file, e),
+            Ok(stat) if stat.success() => Ok(out_file),
+            Ok(stat) => Err(format!("windres failed to compile \"{}\" into \"{}\" with {}", resource, out_file, stat).into()),
+            Err(e) => Err(format!("Couldn't to execute windres to compile \"{}\" into \"{}\": {}", resource, out_file, e).into()),
         }
-        out_file
     }
 }
 

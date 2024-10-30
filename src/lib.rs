@@ -45,10 +45,14 @@
 //! extern crate embed_resource;
 //!
 //! fn main() {
-//!     embed_resource::compile("checksums.rc", embed_resource::NONE);  // or
-//!     embed_resource::compile("checksums.rc", &["VERSION=000901"]);
+//!     embed_resource::compile("checksums.rc", embed_resource::NONE).manifest_optional().unwrap();
+//!     // or
+//!     embed_resource::compile("checksums.rc", &["VERSION=000901"]).manifest_required().unwrap();
 //! }
 //! ```
+//!
+//! Use `.manifest_optional().unwrap()` if the manifest is cosmetic (like an icon).<br />
+//! Use `.manifest_required().unwrap()` if the manifest is required (security, entry point, &c.).
 //!
 //! ## Errata
 //!
@@ -79,6 +83,13 @@
 //! ### 2.x
 //!
 //! Add `embed_resource::NONE` as the last argument to `embed_resource::compile()` and  `embed_resource::compile_for()`.
+//!
+//! ### 3.x
+//!
+//! Add `.manifest_optional().unwrap()` or `.manifest_required().unwrap()` to all [`compile()`] and `compile_for*()` calls.
+//! `CompilationResult` is `#[must_use]` so should be highlighted automatically.
+//!
+//! Embed-resource <3.x always behaves like `.manifest_optional().unwrap()`.
 //!
 //! # Credit
 //!
@@ -137,17 +148,87 @@ use self::windows_not_msvc::*;
 
 use std::{env, fs};
 use std::ffi::OsStr;
-use std::fmt::Display;
+use std::borrow::Cow;
 use std::process::Command;
 use toml::Value as TomlValue;
+use std::fmt::{self, Display};
 use toml::map::Map as TomlMap;
 use std::path::{Path, PathBuf};
 
 
-/// Empty slice, properly-typed for `compile()` and `compile_for()`'s macro list.
+/// Empty slice, properly-typed for [`compile()`] and `compile_for*()`'s macro list.
 ///
 /// Rust helpfully forbids default type parameters on functions, so just passing `[]` doesn't work :)
 pub const NONE: &[&OsStr] = &[];
+
+
+/// Result of [`compile()`] and `compile_for*()`
+///
+/// Turn this into a `Result` with `manifest_optional()` if the manifest is nice, but isn't required, like when embedding an
+/// icon or some other cosmetic.
+///
+/// Turn this into a `Result` with `manifest_required()` if the manifest is mandatory, like when configuring entry points or
+/// security.
+#[must_use]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub enum CompilationResult {
+    /// not building for windows
+    NotWindows,
+    /// built, linked
+    Ok,
+    /// building for windows, but the environment can't compile a resource (most likely due to a missing compiler)
+    NotAttempted(Cow<'static, str>),
+    /// environment can compile a resource, but has failed to do so
+    Failed(Cow<'static, str>),
+}
+impl CompilationResult {
+    /// `Ok(())` if `NotWindows`, `Ok`, or `NotAttempted`; `Err(self)` if `Failed`
+    pub fn manifest_optional(self) -> Result<(), CompilationResult> {
+        match self {
+            CompilationResult::NotWindows |
+            CompilationResult::Ok |
+            CompilationResult::NotAttempted(..) => Ok(()),
+            err @ CompilationResult::Failed(..) => Err(err),
+        }
+    }
+
+    /// `Ok(())` if `NotWindows`, `Ok`; `Err(self)` if `NotAttempted` or `Failed`
+    pub fn manifest_required(self) -> Result<(), CompilationResult> {
+        match self {
+            CompilationResult::NotWindows |
+            CompilationResult::Ok => Ok(()),
+            err @ CompilationResult::NotAttempted(..) |
+            err @ CompilationResult::Failed(..) => Err(err),
+        }
+    }
+}
+impl Display for CompilationResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.write_str("embed-resource: ")?;
+        match self {
+            CompilationResult::NotWindows => f.write_str("not building for windows"),
+            CompilationResult::Ok => f.write_str("OK"),
+            CompilationResult::NotAttempted(why) => {
+                f.write_str("compilation not attempted: ")?;
+                if !why.contains(' ') {
+                    f.write_str("missing compiler: ")?;
+                }
+                f.write_str(why)
+            }
+            CompilationResult::Failed(err) => f.write_str(err),
+        }
+    }
+}
+impl std::error::Error for CompilationResult {}
+
+macro_rules! try_compile_impl {
+    ($expr:expr) => {
+        match $expr {
+            Result::Ok(val) => val,
+            Result::Err(err) => return err,
+        }
+    };
+}
 
 
 /// Compile the Windows resource file and update the cargo search path if building for Windows.
@@ -180,32 +261,32 @@ pub const NONE: &[&OsStr] = &[];
 ///     embed_resource::compile("checksums.rc", embed_resource::NONE);
 /// }
 /// ```
-pub fn compile<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) {
-    if let Some((prefix, out_dir, out_file)) = compile_impl(resource_file.as_ref(), macros) {
-        let hasbins = fs::read_to_string("Cargo.toml")
-            .unwrap_or_else(|err| {
-                eprintln!("Couldn't read Cargo.toml: {}; assuming src/main.rs or S_ISDIR(src/bin/)", err);
-                String::new()
-            })
-            .parse::<TomlValue>()
-            .unwrap_or_else(|err| {
-                eprintln!("Couldn't parse Cargo.toml: {}; assuming src/main.rs or S_ISDIR(src/bin/)", err);
-                TomlValue::Table(TomlMap::new())
-            })
-            .as_table()
-            .map(|t| t.contains_key("bin"))
-            .unwrap_or(false) || (Path::new("src/main.rs").exists() || Path::new("src/bin").is_dir());
-        eprintln!("Final verdict: crate has binaries: {}", hasbins);
+pub fn compile<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) -> CompilationResult {
+    let (prefix, out_dir, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), macros));
+    let hasbins = fs::read_to_string("Cargo.toml")
+        .unwrap_or_else(|err| {
+            eprintln!("Couldn't read Cargo.toml: {}; assuming src/main.rs or S_ISDIR(src/bin/)", err);
+            String::new()
+        })
+        .parse::<TomlValue>()
+        .unwrap_or_else(|err| {
+            eprintln!("Couldn't parse Cargo.toml: {}; assuming src/main.rs or S_ISDIR(src/bin/)", err);
+            TomlValue::Table(TomlMap::new())
+        })
+        .as_table()
+        .map(|t| t.contains_key("bin"))
+        .unwrap_or(false) || (Path::new("src/main.rs").exists() || Path::new("src/bin").is_dir());
+    eprintln!("Final verdict: crate has binaries: {}", hasbins);
 
-        if hasbins && rustc_version::version().expect("couldn't get rustc version") >= rustc_version::Version::new(1, 50, 0) {
-            println!("cargo:rustc-link-arg-bins={}", out_file);
-        } else {
-            // Cargo pre-0.51.0 (rustc pre-1.50.0) compat
-            // Only links to the calling crate's library
-            println!("cargo:rustc-link-search=native={}", out_dir);
-            println!("cargo:rustc-link-lib=dylib={}", prefix);
-        }
+    if hasbins && rustc_version::version().expect("couldn't get rustc version") >= rustc_version::Version::new(1, 50, 0) {
+        println!("cargo:rustc-link-arg-bins={}", out_file);
+    } else {
+        // Cargo pre-0.51.0 (rustc pre-1.50.0) compat
+        // Only links to the calling crate's library
+        println!("cargo:rustc-link-search=native={}", out_dir);
+        println!("cargo:rustc-link-lib=dylib={}", prefix);
     }
+    CompilationResult::Ok
 }
 
 /// Likewise, but only for select binaries.
@@ -224,60 +305,68 @@ pub fn compile<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(re
 /// }
 /// ```
 pub fn compile_for<T: AsRef<Path>, J: Display, I: IntoIterator<Item = J>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, for_bins: I,
-                                                                                                                         macros: Mi) {
-    if let Some((_, _, out_file)) = compile_impl(resource_file.as_ref(), macros) {
-        for bin in for_bins {
-            println!("cargo:rustc-link-arg-bin={}={}", bin, out_file);
-        }
+                                                                                                                         macros: Mi)
+                                                                                                                         -> CompilationResult {
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), macros));
+    for bin in for_bins {
+        println!("cargo:rustc-link-arg-bin={}={}", bin, out_file);
     }
+    CompilationResult::Ok
 }
 
-/// Likewise, but only link the resource to test binaries (select types only. unclear which (and likely to change). you may prefer [`compile_for_everything()`]).
+/// Likewise, but only link the resource to test binaries (select types only. unclear which (and likely to change). you may
+/// prefer [`compile_for_everything()`]).
 ///
 /// Only available since rustc 1.60.0, does nothing before.
-pub fn compile_for_tests<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) {
-    if let Some((_, _, out_file)) = compile_impl(resource_file.as_ref(), macros) {
-        println!("cargo:rustc-link-arg-tests={}", out_file);
-    }
+pub fn compile_for_tests<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) -> CompilationResult {
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), macros));
+    println!("cargo:rustc-link-arg-tests={}", out_file);
+    CompilationResult::Ok
 }
 
 /// Likewise, but only link the resource to benchmarks.
 ///
 /// Only available since rustc 1.60.0, does nothing before.
-pub fn compile_for_benchmarks<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) {
-    if let Some((_, _, out_file)) = compile_impl(resource_file.as_ref(), macros) {
-        println!("cargo:rustc-link-arg-benches={}", out_file);
-    }
+pub fn compile_for_benchmarks<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) -> CompilationResult {
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), macros));
+    println!("cargo:rustc-link-arg-benches={}", out_file);
+    CompilationResult::Ok
 }
 
 /// Likewise, but only link the resource to examples.
 ///
 /// Only available since rustc 1.60.0, does nothing before.
-pub fn compile_for_examples<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) {
-    if let Some((_, _, out_file)) = compile_impl(resource_file.as_ref(), macros) {
-        println!("cargo:rustc-link-arg-examples={}", out_file);
-    }
+pub fn compile_for_examples<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) -> CompilationResult {
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), macros));
+    println!("cargo:rustc-link-arg-examples={}", out_file);
+    CompilationResult::Ok
 }
 
-/// Likewise, but link the resource into *every* artifact: binaries, cdylibs, examples, tests (`[[test]]`/`#[test]`/doctest), benchmarks, &c.
+/// Likewise, but link the resource into *every* artifact: binaries, cdylibs, examples, tests (`[[test]]`/`#[test]`/doctest),
+/// benchmarks, &c.
 ///
 /// Only available since rustc 1.50.0, does nothing before.
-pub fn compile_for_everything<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) {
-    if let Some((_, _, out_file)) = compile_impl(resource_file.as_ref(), macros) {
-        println!("cargo:rustc-link-arg={}", out_file);
-    }
+pub fn compile_for_everything<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) -> CompilationResult {
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), macros));
+    println!("cargo:rustc-link-arg={}", out_file);
+    CompilationResult::Ok
 }
 
-fn compile_impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: &Path, macros: Mi) -> Option<(&str, String, String)> {
+fn compile_impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: &Path, macros: Mi) -> Result<(&str, String, String), CompilationResult> {
     let comp = ResourceCompiler::new();
-    if comp.is_supported() {
+    if let Some(missing) = comp.is_supported() {
+        if missing.is_empty() {
+            Err(CompilationResult::NotWindows)
+        } else {
+            Err(CompilationResult::NotAttempted(missing))
+        }
+    } else {
         let prefix = &resource_file.file_stem().expect("resource_file has no stem").to_str().expect("resource_file's stem not UTF-8");
         let out_dir = env::var("OUT_DIR").expect("No OUT_DIR env var");
 
-        let out_file = comp.compile_resource(&out_dir, &prefix, resource_file.to_str().expect("resource_file not UTF-8"), macros);
-        Some((prefix, out_dir, out_file))
-    } else {
-        None
+        let out_file = comp.compile_resource(&out_dir, &prefix, resource_file.to_str().expect("resource_file not UTF-8"), macros)
+            .map_err(CompilationResult::Failed)?;
+        Ok((prefix, out_dir, out_file))
     }
 }
 

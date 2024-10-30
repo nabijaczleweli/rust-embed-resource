@@ -4,6 +4,7 @@ use std::path::{PathBuf, Path};
 use self::super::apply_macros;
 use std::process::Command;
 use vswhom::VsFindResult;
+use std::borrow::Cow;
 use winreg::enums::*;
 use std::ffi::OsStr;
 use std::{env, fs};
@@ -21,11 +22,12 @@ impl ResourceCompiler {
     }
 
     #[inline(always)]
-    pub fn is_supported(&self) -> bool {
-        true
+    pub fn is_supported(&self) -> Option<Cow<'static, str>> {
+        None
     }
 
-    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi) -> String {
+    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi)
+                                                                           -> Result<String, Cow<'static, str>> {
         let out_file = format!("{}/{}.lib", out_dir, prefix);
         // `.res`es are linkable under MSVC as well as normal libraries.
         if !apply_macros(Command::new(find_windows_sdk_tool_impl("rc.exe").as_ref().map_or(Path::new("rc.exe"), Path::new))
@@ -34,11 +36,11 @@ impl ResourceCompiler {
                          macros)
             .arg(resource)
             .status()
-            .expect("Are you sure you have RC.EXE in your $PATH?")
+            .map_err(|_| "Are you sure you have RC.EXE in your $PATH?".into())?
             .success() {
-            panic!("RC.EXE failed to compile specified resource file");
+            return Err("RC.EXE failed to compile specified resource file".into());
         }
-        out_file
+        Ok(out_file)
     }
 }
 

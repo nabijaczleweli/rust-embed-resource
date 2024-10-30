@@ -13,13 +13,16 @@ extern crate embed_resource;
 
 fn main() {
     // Compile and link checksums.rc
-    embed_resource::compile("checksums.rc", embed_resource::NONE);
+    embed_resource::compile("checksums.rc", embed_resource::NONE).manifest_optional().unwrap();
 
     // Or, to select a resource file for each binary separately
-    embed_resource::compile_for("assets/poke-a-mango.rc", &["poke-a-mango", "poke-a-mango-installer"], &["VERSION=\"0.5.0\""]);
-    embed_resource::compile_for("assets/uninstaller.rc", &["unins001"], embed_resource::NONE);
+    embed_resource::compile_for("assets/poke-a-mango.rc", &["poke-a-mango", "poke-a-mango-installer"], &["VERSION=\"0.5.0\""]).manifest_required().unwrap();
+    embed_resource::compile_for("assets/uninstaller.rc", &["unins001"], embed_resource::NONE).manifest_required().unwrap();
 }
 ```
+
+Use `.manifest_optional().unwrap()` if the manifest is cosmetic (like an icon).<br />
+Use `.manifest_required().unwrap()` if the manifest is required (security, entry point, &c.).
 
 ## Example: Embedding a Windows Manifest
 Courtesy of [@jpoles1](https://github.com/jpoles1).
@@ -36,7 +39,7 @@ embed-resource = "2.5"
 ```rust
 extern crate embed_resource;
 fn main() {
-    embed_resource::compile("app-name-manifest.rc", embed_resource::NONE);
+    embed_resource::compile("app-name-manifest.rc", embed_resource::NONE).manifest_optional().unwrap();
 }
 ```
 
@@ -70,7 +73,7 @@ Because the first step in building a manifest is an unspecified C preprocessor s
 If scanning is prohibitively expensive, or you have something else that generates the annotations, you may want to spec the full non-system dependency list for your manifest manually, so:
 ```rust
 println!("cargo:rerun-if-changed=app-name-manifest.rc");
-embed_resource::compile("app-name-manifest.rc", embed_resource::NONE);
+embed_resource::compile("app-name-manifest.rc", embed_resource::NONE).manifest_optional().unwrap();
 ```
 for the above example (cf. [#41](https://github.com/nabijaczleweli/rust-embed-resource/issues/41)).
 
@@ -78,6 +81,13 @@ for the above example (cf. [#41](https://github.com/nabijaczleweli/rust-embed-re
 ### 2.x
 
 Add `embed_resource::NONE` as the last argument to `embed_resource::compile()` and  `embed_resource::compile_for()`.
+
+### 3.x
+
+Add `.manifest_optional().unwrap()` or `.manifest_required().unwrap()` to all `embed_resource::compile()` and `embed_resource::compile_for*()` calls.
+`CompilationResult` is `#[must_use]` so should be highlighted automatically.
+
+Embed-resource <3.x always behaves like `.manifest_optional().unwrap()`.
 
 ## Credit
 
