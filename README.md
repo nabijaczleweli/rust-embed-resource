@@ -77,6 +77,13 @@ embed_resource::compile("app-name-manifest.rc", embed_resource::NONE).manifest_o
 ```
 for the above example (cf. [#41](https://github.com/nabijaczleweli/rust-embed-resource/issues/41)).
 
+## Old releases with backports
+`v1.6-stable` continues after 1.6.6 broke library-only crates, then 1.7.0 introduced a new interface. 1.6.6 was yanked, 1.6.7 fixed this.<br />
+`v2.5-stable` continues after it turned out that builds have been universally broken on Win32 below `\?\\` paths. 3.0.1 and 2.5.1 (and 1.6.14) fixed this.
+
+These both receive backports of all fixes that affect them. You should still probably update.<br />
+The default branch is stable, and currently has 3.x.
+
 ## Migration
 ### 2.x
 
