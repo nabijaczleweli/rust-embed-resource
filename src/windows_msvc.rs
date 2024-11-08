@@ -1,6 +1,6 @@
+use std::path::{PathBuf, Path, MAIN_SEPARATOR};
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::atomic::AtomicBool;
-use std::path::{PathBuf, Path};
 use self::super::apply_macros;
 use std::process::Command;
 use vswhom::VsFindResult;
@@ -26,7 +26,7 @@ impl ResourceCompiler {
     }
 
     pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi) -> String {
-        let out_file = format!("{}/{}.lib", out_dir, prefix);
+        let out_file = format!("{}{}{}.lib", out_dir, MAIN_SEPARATOR, prefix);
         // `.res`es are linkable under MSVC as well as normal libraries.
         if !apply_macros(Command::new(find_windows_sdk_tool_impl("rc.exe").as_ref().map_or(Path::new("rc.exe"), Path::new))
                              .args(&["/fo", &out_file, "/I", out_dir]),
