@@ -1,6 +1,6 @@
+use std::path::{PathBuf, Path, MAIN_SEPARATOR};
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::atomic::AtomicBool;
-use std::path::{PathBuf, Path};
 use std::process::Command;
 use vswhom::VsFindResult;
 use winreg::enums::*;
@@ -24,7 +24,7 @@ impl ResourceCompiler {
     }
 
     pub fn compile_resource(&self, out_dir: &str, prefix: &str, resource: &str) -> String {
-        let out_file = format!("{}/{}.lib", out_dir, prefix);
+        let out_file = format!("{}{}{}.lib", out_dir, MAIN_SEPARATOR, prefix);
         // `.res`es are linkable under MSVC as well as normal libraries.
         if !Command::new(find_windows_sdk_tool_impl("rc.exe").as_ref().map_or(Path::new("rc.exe"), Path::new))
             .args(&["/fo", &out_file, "/I", out_dir, resource])

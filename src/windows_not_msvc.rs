@@ -1,5 +1,5 @@
+use std::path::{PathBuf, MAIN_SEPARATOR};
 use std::process::Command;
-use std::path::PathBuf;
 use std::borrow::Cow;
 use std::ffi::OsStr;
 use std::env;
@@ -21,7 +21,7 @@ impl ResourceCompiler {
     }
 
     pub fn compile_resource(&self, out_dir: &str, prefix: &str, resource: &str) -> String {
-        let out_file = format!("{}/lib{}.a", out_dir, prefix);
+        let out_file = format!("{}{}lib{}.a", out_dir, MAIN_SEPARATOR, prefix);
 
         // Under some msys2 environments, $MINGW_CHOST has the correct target for
         // GNU windres or llvm-windres (clang32, clang64, or clangarm64)
