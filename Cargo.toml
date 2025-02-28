@@ -50,7 +50,7 @@ cc = "1.0"
 vswhom = "0.1"
 
 [target.'cfg(all(target_os = "windows", target_env = "msvc"))'.dependencies.winreg]
-version = "0.52"
+version = "0.55"
 default-features = false
 
 
