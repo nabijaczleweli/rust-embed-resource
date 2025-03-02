@@ -108,6 +108,9 @@ impl Compiler {
 
                 try_command(Command::new(&self.executable[..])
                                 .args(&["/fo", &out_file])
+                                // use UTF8 as an encoding
+                                // this makes it easier since in rust all string are UTF8
+                                .args(&["/C", "65001"])
                                 .args(if has_no_preprocess {
                                     // We already preprocessed using CC. llvm-rc preprocessing
                                     // requires having clang in PATH, which more exotic toolchains
