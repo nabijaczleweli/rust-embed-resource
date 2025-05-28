@@ -108,6 +108,7 @@ impl Compiler {
 
                 try_command(Command::new(&self.executable[..])
                                 .args(&["/fo", &out_file])
+                                .args(&["/C", "65001"]) // UTF-8, cf. https://github.com/nabijaczleweli/rust-embed-resource/pull/73
                                 .args(if has_no_preprocess {
                                     // We already preprocessed using CC. llvm-rc preprocessing
                                     // requires having clang in PATH, which more exotic toolchains
