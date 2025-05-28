@@ -11,7 +11,7 @@ license = "MIT"
 # Remember to also update in README
 # Remember to also update in .github/workflows/msvc/test.py
 # Remember to also update in .github/workflows/msvc/version.rc
-version = "3.0.2"
+version = "3.0.3"
 authors = ["наб <nabijaczleweli@nabijaczleweli.xyz>",
            "Cat Plus Plus <piotrlegnica@piotrl.pl>",
            "Liigo <liigo@qq.com>",
@@ -33,7 +33,9 @@ authors = ["наб <nabijaczleweli@nabijaczleweli.xyz>",
            "Michael Farrell <micolous+git@gmail.com>",
            "Jacob Okamoto <oko@oko.io>",
            "Marijn Suijten <marijn@traverseresearch.nl>",
-           "Lucas Nogueira <lucas@tauri.app>"]
+           "Lucas Nogueira <lucas@tauri.app>",
+           "CharlesChen0823 <yongchen0823@gmail.com>",
+           "Daniel Schaefer <dhs@frame.work>"]
 exclude = ["*.enc"]
 
 
