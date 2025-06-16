@@ -1,7 +1,7 @@
 image:
   - Visual Studio 2022
 
-version: 3.0.3-{build}
+version: 3.0.4-{build}
 
 skip_tags: false
 
