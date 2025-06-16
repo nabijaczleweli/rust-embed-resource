@@ -53,7 +53,7 @@ impl Compiler {
             return Some(guess_compiler_variant(&rc));
         }
 
-        if target.ends_with("-pc-windows-gnu") || target.ends_with("-pc-windows-gnullvm") {
+        if target.ends_with("-windows-gnu") || target.ends_with("-windows-gnullvm") {
             let executable = format!("{}-w64-mingw32-windres", &target[0..target.find('-').unwrap_or_default()]);
             if is_runnable(&executable) {
                 return Some(Compiler {
@@ -61,7 +61,7 @@ impl Compiler {
                     executable: executable.into(),
                 });
             }
-        } else if target.ends_with("-pc-windows-msvc") {
+        } else if target.ends_with("-windows-msvc") {
             if is_runnable("llvm-rc") {
                 return Some(Compiler {
                     tp: CompilerType::LlvmRc {
