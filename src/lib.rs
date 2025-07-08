@@ -150,9 +150,8 @@ use std::{env, fs};
 use std::ffi::OsStr;
 use std::borrow::Cow;
 use std::process::Command;
-use toml::Value as TomlValue;
+use toml::Table as TomlTable;
 use std::fmt::{self, Display};
-use toml::map::Map as TomlMap;
 use std::path::{Path, PathBuf};
 
 
@@ -268,14 +267,12 @@ pub fn compile<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(re
             eprintln!("Couldn't read Cargo.toml: {}; assuming src/main.rs or S_ISDIR(src/bin/)", err);
             String::new()
         })
-        .parse::<TomlValue>()
+        .parse::<TomlTable>()
         .unwrap_or_else(|err| {
             eprintln!("Couldn't parse Cargo.toml: {}; assuming src/main.rs or S_ISDIR(src/bin/)", err);
-            TomlValue::Table(TomlMap::new())
+            TomlTable::new()
         })
-        .as_table()
-        .map(|t| t.contains_key("bin"))
-        .unwrap_or(false) || (Path::new("src/main.rs").exists() || Path::new("src/bin").is_dir());
+        .contains_key("bin") || (Path::new("src/main.rs").exists() || Path::new("src/bin").is_dir());
     eprintln!("Final verdict: crate has binaries: {}", hasbins);
 
     if hasbins && rustc_version::version().expect("couldn't get rustc version") >= rustc_version::Version::new(1, 50, 0) {
