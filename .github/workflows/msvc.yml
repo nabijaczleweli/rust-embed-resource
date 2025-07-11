@@ -20,13 +20,13 @@ jobs:
 
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust_version }}
           targets: ${{ matrix.target }}
 
-      - run: pip install "pefile==2023.2.7"
+      - run: pip install "pefile==2024.8.26"
       - run: cargo build --verbose --release --target ${{ matrix.target }} --workspace
 
       # Runner is x86_64, can only run i686 and x86_64
