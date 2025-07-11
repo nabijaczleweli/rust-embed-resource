@@ -55,10 +55,9 @@ impl Compiler {
     pub fn probe() -> Result<Compiler, Cow<'static, str>> {
         let target = env::var("TARGET").map_err(|_| Cow::from("no $TARGET"))?;
 
-        if let Some(rc) = env::var(&format!("RC_{}", target))
+        if let Ok(rc) = env::var(&format!("RC_{}", target))
             .or_else(|_| env::var(&format!("RC_{}", target.replace('-', "_"))))
-            .or_else(|_| env::var("RC"))
-            .ok() {
+            .or_else(|_| env::var("RC")) {
             return guess_compiler_variant(&rc);
         }
 
