@@ -22,6 +22,6 @@ fn main() {
     env::set_var("OUT_DIR", ".");
 
     let resource = env::args().nth(1).expect("Specify the resource file to be compiled as the first argument.");
-    embed_resource::compile(&resource, &["VERSION=\"0.5.0\""]).manifest_required().unwrap();
-    embed_resource::compile_for(&resource, &["embed_resource", "embed_resource-installer"], embed_resource::NONE).manifest_required().unwrap();
+    embed_resource::compile(&resource, ["VERSION=\"0.5.0\""]).manifest_required().unwrap();
+    embed_resource::compile_for(&resource, ["embed_resource", "embed_resource-installer"], embed_resource::NONE).manifest_required().unwrap();
 }

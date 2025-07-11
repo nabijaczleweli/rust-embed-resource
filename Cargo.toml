@@ -37,7 +37,8 @@ authors = ["наб <nabijaczleweli@nabijaczleweli.xyz>",
            "CharlesChen0823 <yongchen0823@gmail.com>",
            "Daniel Schaefer <dhs@frame.work>"]
 exclude = ["*.enc"]
-
+edition = "2015"
+rust-version = "1.70"
 
 [dependencies]
 rustc_version = "0.4"

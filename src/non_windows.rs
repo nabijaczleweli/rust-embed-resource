@@ -55,10 +55,9 @@ impl Compiler {
     pub fn probe() -> Result<Compiler, Cow<'static, str>> {
         let target = env::var("TARGET").map_err(|_| Cow::from("no $TARGET"))?;
 
-        if let Some(rc) = env::var(&format!("RC_{}", target))
-            .or_else(|_| env::var(&format!("RC_{}", target.replace('-', "_"))))
-            .or_else(|_| env::var("RC"))
-            .ok() {
+        if let Ok(rc) = env::var(format!("RC_{target}"))
+            .or_else(|_| env::var(format!("RC_{}", target.replace('-', "_"))))
+            .or_else(|_| env::var("RC")) {
             return guess_compiler_variant(&rc);
         }
 
@@ -95,10 +94,10 @@ impl Compiler {
 
     pub fn compile<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi)
                                                                   -> Result<String, Cow<'static, str>> {
-        let out_file = format!("{}/{}.lib", out_dir, prefix);
+        let out_file = format!("{out_dir}/{prefix}.lib");
         match self.tp {
             CompilerType::LlvmRc { has_no_preprocess } => {
-                let preprocessed_path = format!("{}/{}-preprocessed.rc", out_dir, prefix);
+                let preprocessed_path = format!("{out_dir}/{prefix}-preprocessed.rc");
                 fs::write(&preprocessed_path,
                           cc_xc(apply_macros_cc(cc::Build::new().define("RC_INVOKED", None), macros))
                               .file(resource)
@@ -107,8 +106,8 @@ impl Compiler {
                               .expand()).map_err(|e| e.to_string())?;
 
                 try_command(Command::new(&self.executable[..])
-                                .args(&["/fo", &out_file])
-                                .args(&["/C", "65001"]) // UTF-8, cf. https://github.com/nabijaczleweli/rust-embed-resource/pull/73
+                                .args(["/fo", &out_file])
+                                .args(["/C", "65001"]) // UTF-8, cf. https://github.com/nabijaczleweli/rust-embed-resource/pull/73
                                 .args(if has_no_preprocess {
                                     // We already preprocessed using CC. llvm-rc preprocessing
                                     // requires having clang in PATH, which more exotic toolchains
@@ -117,7 +116,7 @@ impl Compiler {
                                 } else {
                                     &[][..]
                                 })
-                                .args(&["--", &preprocessed_path])
+                                .args(["--", &preprocessed_path])
                                 .stdin(Stdio::piped())
                                 .current_dir(or_curdir(Path::new(resource).parent().expect("Resource parent nonexistent?"))),
                             Path::new(&self.executable[..]),
@@ -127,7 +126,7 @@ impl Compiler {
             }
             CompilerType::WindRes => {
                 try_command(apply_macros(Command::new(&self.executable[..])
-                                             .args(&["--input", resource, "--output-format=coff", "--output", &out_file, "--include-dir", out_dir]),
+                                             .args(["--input", resource, "--output-format=coff", "--output", &out_file, "--include-dir", out_dir]),
                                          "-D",
                                          macros),
                             Path::new(&self.executable[..]),
@@ -140,7 +139,7 @@ impl Compiler {
     }
 }
 
-fn apply_macros_cc<'t, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(to: &'t mut cc::Build, macros: Mi) -> &'t mut cc::Build {
+fn apply_macros_cc<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(to: &mut cc::Build, macros: Mi) -> &mut cc::Build {
     for m in macros {
         let mut m = m.as_ref().to_str().expect("macros must be UTF-8 in this configuration").splitn(2, '=');
         to.define(m.next().unwrap(), m.next());
@@ -177,7 +176,7 @@ fn or_curdir(directory: &Path) -> &Path {
 /// /? will print the help in LLVM-RC and Microsoft RC.EXE.
 /// If combined, /? takes precedence over -V.
 fn guess_compiler_variant(s: &str) -> Result<Compiler, Cow<'static, str>> {
-    match Command::new(s).args(&["-V", "/?"]).output() {
+    match Command::new(s).args(["-V", "/?"]).output() {
         Ok(out) => {
             if out.stdout.starts_with(b"GNU windres") {
                 Ok(Compiler {
@@ -190,10 +189,10 @@ fn guess_compiler_variant(s: &str) -> Result<Compiler, Cow<'static, str>> {
                     tp: CompilerType::LlvmRc { has_no_preprocess: memmem::find(&out.stdout, b"no-preprocess").is_some() },
                 })
             } else {
-                Err(format!("Unknown RC compiler variant: {}", s).into())
+                Err(format!("Unknown RC compiler variant: {s}").into())
             }
         }
-        Err(err) => Err(format!("Couldn't execute {}: {}", s, err).into()),
+        Err(err) => Err(format!("Couldn't execute {s}: {err}").into()),
     }
 }
 

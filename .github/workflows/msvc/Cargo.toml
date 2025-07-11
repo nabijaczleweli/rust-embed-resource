@@ -3,6 +3,8 @@ name = "embed-resource-msvc-test"
 version = "0.0.0"
 build = "build.rs"
 workspace = "../../.."
+edition = "2015"
+rust-version = "1.70"
 
 [[bin]]
 name = "embed-resource-msvc-test"
