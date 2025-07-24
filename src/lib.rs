@@ -66,7 +66,7 @@
 //! println!("cargo:rerun-if-changed=app-name-manifest.rc");
 //! embed_resource::compile("app-name-manifest.rc", embed_resource::NONE);
 //! ```
-//! for the above example (cf, [#41](https://github.com/nabijaczleweli/rust-embed-resource/issues/41)).
+//! for the above example (cf. [#41](https://github.com/nabijaczleweli/rust-embed-resource/issues/41)).
 //!
 //! # Cross-compilation
 //!
