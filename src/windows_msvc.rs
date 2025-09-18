@@ -26,14 +26,29 @@ impl ResourceCompiler {
         None
     }
 
-    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi)
-                                                                           -> Result<String, Cow<'static, str>> {
+    pub fn compile_resource<Ms, MsIter, Is, IsIter>(
+        &self,
+        out_dir: &str,
+        prefix: &str,
+        resource: &str,
+        macros: MsIter,
+        include_dirs: IsIter,
+    ) -> Result<String, Cow<'static, str>>
+    where
+        Ms: AsRef<OsStr>,
+        MsIter: IntoIterator<Item = Ms>,
+        Is: AsRef<OsStr>,
+        IsIter: IntoIterator<Item = Is>,
+    {
         let out_file = format!("{}{}{}.lib", out_dir, MAIN_SEPARATOR, prefix);
         // `.res`es are linkable under MSVC as well as normal libraries.
-        if !apply_macros(Command::new(find_windows_sdk_tool_impl("rc.exe").as_ref().map_or(Path::new("rc.exe"), Path::new))
-                             .args(&["/fo", &out_file, "/I", out_dir]),
-                         "/D",
-                         macros)
+        let mut cmd = Command::new(find_windows_sdk_tool_impl("rc.exe").as_ref().map_or(Path::new("rc.exe"), Path::new));
+        cmd.args(&["/fo", &out_file, "/I", out_dir]);
+        for dir in include_dirs {
+            cmd.arg("/I").arg(dir);
+        }
+
+        if !apply_macros(&mut cmd, "/D", macros)
             .arg(resource)
             .status()
             .map_err(|_| Cow::from("Are you sure you have RC.EXE in your $PATH?"))?

@@ -21,8 +21,20 @@ impl ResourceCompiler {
         None
     }
 
-    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi)
-                                                                           -> Result<String, Cow<'static, str>> {
+    pub fn compile_resource<Ms, MsIter, Is, IsIter>(
+        &self,
+        out_dir: &str,
+        prefix: &str,
+        resource: &str,
+        macros: MsIter,
+        include_dirs: IsIter,
+    ) -> Result<String, Cow<'static, str>>
+    where
+        Ms: AsRef<OsStr>,
+        MsIter: IntoIterator<Item = Ms>,
+        Is: AsRef<OsStr>,
+        IsIter: IntoIterator<Item = Is>,
+    {
         let out_file = format!("{}{}lib{}.a", out_dir, MAIN_SEPARATOR, prefix);
 
         // Under some msys2 environments, $MINGW_CHOST has the correct target for
@@ -38,13 +50,15 @@ impl ResourceCompiler {
                 .into()
         });
 
-        match apply_macros(Command::new("windres")
-                               .args(&["--input", resource, "--output-format=coff", "--target"])
-                               .arg(target)
-                               .args(&["--output", &out_file, "--include-dir", out_dir]),
-                           "-D",
-                           macros)
-            .status() {
+        let mut cmd = Command::new("windres");
+        cmd.args(["--input", resource, "--output-format=coff", "--target"]);
+        cmd.arg(target);
+        cmd.args(["--output", &out_file, "--include-dir", out_dir]);
+        for dir in include_dirs {
+            cmd.arg("--include-dir").arg(dir);
+        }
+
+        match apply_macros(&mut cmd, "-D", macros).status() {
             Ok(stat) if stat.success() => Ok(out_file),
             Ok(stat) => Err(format!("windres failed to compile \"{}\" into \"{}\" with {}", resource, out_file, stat).into()),
             Err(e) => Err(format!("Couldn't to execute windres to compile \"{}\" into \"{}\": {}", resource, out_file, e).into()),

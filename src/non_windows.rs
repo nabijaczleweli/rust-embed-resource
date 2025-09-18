@@ -28,9 +28,21 @@ impl ResourceCompiler {
         }
     }
 
-    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi)
-                                                                           -> Result<String, Cow<'static, str>> {
-        self.compiler.as_ref().expect("Not supported but we got to compile_resource()?").compile(out_dir, prefix, resource, macros)
+    pub fn compile_resource<Ms, MsIter, Is, IsIter>(
+        &self,
+        out_dir: &str,
+        prefix: &str,
+        resource: &str,
+        macros: MsIter,
+        include_dirs: IsIter,
+    ) -> Result<String, Cow<'static, str>>
+    where
+        Ms: AsRef<OsStr>,
+        MsIter: IntoIterator<Item = Ms>,
+        Is: AsRef<OsStr>,
+        IsIter: IntoIterator<Item = Is>,
+    {
+        self.compiler.as_ref().expect("Not supported but we got to compile_resource()?").compile(out_dir, prefix, resource, macros, include_dirs)
     }
 }
 
@@ -92,14 +104,31 @@ impl Compiler {
         Err("".into())
     }
 
-    pub fn compile<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi)
-                                                                  -> Result<String, Cow<'static, str>> {
+    pub fn compile<Ms, MsIter, Is, IsIter>(
+        &self,
+        out_dir: &str,
+        prefix: &str,
+        resource: &str,
+        macros: MsIter,
+        include_dirs: IsIter,
+    ) -> Result<String, Cow<'static, str>>
+    where
+        Ms: AsRef<OsStr>,
+        MsIter: IntoIterator<Item = Ms>,
+        Is: AsRef<OsStr>,
+        IsIter: IntoIterator<Item = Is>,
+    {
         let out_file = format!("{}/{}.lib", out_dir, prefix);
         match self.tp {
             CompilerType::LlvmRc { has_no_preprocess } => {
                 let preprocessed_path = format!("{}/{}-preprocessed.rc", out_dir, prefix);
+                let mut cc_build = cc::Build::new();
+                cc_build.define("RC_INVOKED", None);
+                for dir in include_dirs {
+                    cc_build.include(Path::new(dir.as_ref()));
+                }
                 fs::write(&preprocessed_path,
-                          cc_xc(apply_macros_cc(cc::Build::new().define("RC_INVOKED", None), macros))
+                          cc_xc(apply_macros_cc(&mut cc_build, macros))
                               .file(resource)
                               .cargo_metadata(false)
                               .include(out_dir)
@@ -125,10 +154,12 @@ impl Compiler {
                             &out_file)?;
             }
             CompilerType::WindRes => {
-                try_command(apply_macros(Command::new(&self.executable[..])
-                                             .args(&["--input", resource, "--output-format=coff", "--output", &out_file, "--include-dir", out_dir]),
-                                         "-D",
-                                         macros),
+                let mut cmd = Command::new(&self.executable[..]);
+                cmd.args(["--input", resource, "--output-format=coff", "--output", &out_file, "--include-dir", out_dir]);
+                for dir in include_dirs {
+                    cmd.arg("--include-dir").arg(dir);
+                }
+                try_command(apply_macros(&mut cmd, "-D", macros),
                             Path::new(&self.executable[..]),
                             "compile",
                             resource,
