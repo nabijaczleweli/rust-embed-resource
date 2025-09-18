@@ -9,7 +9,7 @@ BEGIN
             // Strings must match test.py
             VALUE "CompanyName", "nabijaczleweli\0"
             VALUE "ProductName", "rust-embed-resource/example/version\0"
-            VALUE "ProductVersion", "3.0.5\0"
+            VALUE "ProductVersion", "3.0.6\0"
         END
     END
 
