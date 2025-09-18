@@ -1,5 +1,5 @@
+use self::super::{ArgumentBundle, apply_parameters};
 use std::path::{PathBuf, MAIN_SEPARATOR};
-use self::super::apply_macros;
 use std::process::Command;
 use std::borrow::Cow;
 use std::ffi::OsStr;
@@ -21,8 +21,9 @@ impl ResourceCompiler {
         None
     }
 
-    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi)
-                                                                           -> Result<String, Cow<'static, str>> {
+    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>>(
+        &self, out_dir: &str, prefix: &str, resource: &str, parameters: ArgumentBundle<Ms, Mi, Is, Ii>)
+        -> Result<String, Cow<'static, str>> {
         let out_file = format!("{}{}lib{}.a", out_dir, MAIN_SEPARATOR, prefix);
 
         // Under some msys2 environments, $MINGW_CHOST has the correct target for
@@ -38,12 +39,12 @@ impl ResourceCompiler {
                 .into()
         });
 
-        match apply_macros(Command::new("windres")
-                               .args(&["--input", resource, "--output-format=coff", "--target"])
-                               .arg(target)
-                               .args(&["--output", &out_file, "--include-dir", out_dir]),
-                           "-D",
-                           macros)
+        match apply_parameters(Command::new("windres")
+                                   .args(&["--input", resource, "--output-format=coff", "--target"])
+                                   .arg(target)
+                                   .args(&["--output", &out_file, "--include-dir", out_dir]),
+                               "-D","-I",
+                               parameters)
             .status() {
             Ok(stat) if stat.success() => Ok(out_file),
             Ok(stat) => Err(format!("windres failed to compile \"{}\" into \"{}\" with {}", resource, out_file, stat).into()),

@@ -1,6 +1,6 @@
+use self::super::{ArgumentBundle, apply_parameters};
 use std::process::{Command, Stdio};
 use std::path::{PathBuf, Path};
-use self::super::apply_macros;
 use std::{env, fs, mem};
 use std::borrow::Cow;
 use std::ffi::OsStr;
@@ -28,9 +28,10 @@ impl ResourceCompiler {
         }
     }
 
-    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi)
-                                                                           -> Result<String, Cow<'static, str>> {
-        self.compiler.as_ref().expect("Not supported but we got to compile_resource()?").compile(out_dir, prefix, resource, macros)
+    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>>(
+        &self, out_dir: &str, prefix: &str, resource: &str, parameters: ArgumentBundle<Ms, Mi, Is, Ii>)
+        -> Result<String, Cow<'static, str>> {
+        self.compiler.as_ref().expect("Not supported but we got to compile_resource()?").compile(out_dir, prefix, resource, parameters)
     }
 }
 
@@ -92,14 +93,16 @@ impl Compiler {
         Err("".into())
     }
 
-    pub fn compile<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi)
-                                                                  -> Result<String, Cow<'static, str>> {
+    pub fn compile<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>>(&self, out_dir: &str, prefix: &str,
+                                                                                                                 resource: &str,
+                                                                                                                 parameters: ArgumentBundle<Ms, Mi, Is, Ii>)
+                                                                                                                 -> Result<String, Cow<'static, str>> {
         let out_file = format!("{}/{}.lib", out_dir, prefix);
         match self.tp {
             CompilerType::LlvmRc { has_no_preprocess } => {
                 let preprocessed_path = format!("{}/{}-preprocessed.rc", out_dir, prefix);
                 fs::write(&preprocessed_path,
-                          cc_xc(apply_macros_cc(cc::Build::new().define("RC_INVOKED", None), macros))
+                          cc_xc(apply_parameters_cc(cc::Build::new().define("RC_INVOKED", None), parameters))
                               .file(resource)
                               .cargo_metadata(false)
                               .include(out_dir)
@@ -125,10 +128,11 @@ impl Compiler {
                             &out_file)?;
             }
             CompilerType::WindRes => {
-                try_command(apply_macros(Command::new(&self.executable[..])
-                                             .args(&["--input", resource, "--output-format=coff", "--output", &out_file, "--include-dir", out_dir]),
-                                         "-D",
-                                         macros),
+                try_command(apply_parameters(Command::new(&self.executable[..])
+                                                 .args(&["--input", resource, "--output-format=coff", "--output", &out_file, "--include-dir", out_dir]),
+                                             "-D",
+                                             "-I",
+                                             parameters),
                             Path::new(&self.executable[..]),
                             "compile",
                             resource,
@@ -139,10 +143,18 @@ impl Compiler {
     }
 }
 
-fn apply_macros_cc<'t, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(to: &'t mut cc::Build, macros: Mi) -> &'t mut cc::Build {
-    for m in macros {
+fn apply_parameters_cc<'t, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>>(to: &'t mut cc::Build,
+                                                                                                                         parameters: ArgumentBundle<Ms,
+                                                                                                                                                    Mi,
+                                                                                                                                                    Is,
+                                                                                                                                                    Ii>)
+                                                                                                                         -> &'t mut cc::Build {
+    for m in parameters.macros {
         let mut m = m.as_ref().to_str().expect("macros must be UTF-8 in this configuration").splitn(2, '=');
         to.define(m.next().unwrap(), m.next());
+    }
+    for id in parameters.include_dirs {
+        to.include(id.as_ref());
     }
     to
 }

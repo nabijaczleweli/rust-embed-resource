@@ -345,7 +345,7 @@ pub fn compile<T: AsRef<Path>,
                P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
     resource_file: T, parameters: P)
     -> CompilationResult {
-    let (prefix, out_dir, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into().macros));
+    let (prefix, out_dir, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into()));
     let hasbins = fs::read_to_string("Cargo.toml")
         .unwrap_or_else(|err| {
             eprintln!("Couldn't read Cargo.toml: {}; assuming src/main.rs or S_ISDIR(src/bin/)", err);
@@ -395,7 +395,7 @@ pub fn compile_for<T: AsRef<Path>,
                    P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
     resource_file: T, for_bins: I, parameters: P)
     -> CompilationResult {
-    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into().macros));
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into()));
     for bin in for_bins {
         println!("cargo:rustc-link-arg-bin={}={}", bin, out_file);
     }
@@ -414,7 +414,7 @@ pub fn compile_for_tests<T: AsRef<Path>,
                          P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
     resource_file: T, parameters: P)
     -> CompilationResult {
-    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into().macros));
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into()));
     println!("cargo:rustc-link-arg-tests={}", out_file);
     CompilationResult::Ok
 }
@@ -430,7 +430,7 @@ pub fn compile_for_benchmarks<T: AsRef<Path>,
                               P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
     resource_file: T, parameters: P)
     -> CompilationResult {
-    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into().macros));
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into()));
     println!("cargo:rustc-link-arg-benches={}", out_file);
     CompilationResult::Ok
 }
@@ -446,7 +446,7 @@ pub fn compile_for_examples<T: AsRef<Path>,
                             P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
     resource_file: T, parameters: P)
     -> CompilationResult {
-    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into().macros));
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into()));
     println!("cargo:rustc-link-arg-examples={}", out_file);
     CompilationResult::Ok
 }
@@ -463,7 +463,7 @@ pub fn compile_for_everything<T: AsRef<Path>,
                               P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
     resource_file: T, parameters: P)
     -> CompilationResult {
-    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into().macros));
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into()));
     println!("cargo:rustc-link-arg={}", out_file);
     CompilationResult::Ok
 }
@@ -482,18 +482,24 @@ fn compile_impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>,
         let prefix = &resource_file.file_stem().expect("resource_file has no stem").to_str().expect("resource_file's stem not UTF-8");
         let out_dir = env::var("OUT_DIR").expect("No OUT_DIR env var");
 
-        let out_file = comp.compile_resource(&out_dir,
-                              &prefix,
-                              resource_file.to_str().expect("resource_file not UTF-8"),
-                              parameters.into().macros)
+        let out_file = comp.compile_resource(&out_dir, &prefix, resource_file.to_str().expect("resource_file not UTF-8"), parameters.into())
             .map_err(CompilationResult::Failed)?;
         Ok((prefix, out_dir, out_file))
     }
 }
 
-fn apply_macros<'t, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(to: &'t mut Command, pref: &str, macros: Mi) -> &'t mut Command {
-    for m in macros {
-        to.arg(pref).arg(m);
+fn apply_parameters<'t, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>>(to: &'t mut Command, macro_pref: &str,
+                                                                                                                      include_dir_pref: &str,
+                                                                                                                      parameters: ArgumentBundle<Ms,
+                                                                                                                                                 Mi,
+                                                                                                                                                 Is,
+                                                                                                                                                 Ii>)
+                                                                                                                      -> &'t mut Command {
+    for m in parameters.macros {
+        to.arg(macro_pref).arg(m);
+    }
+    for id in parameters.include_dirs {
+        to.arg(include_dir_pref).arg(id);
     }
     to
 }

@@ -1,7 +1,7 @@
+use self::super::{ArgumentBundle, apply_parameters};
 use std::path::{PathBuf, Path, MAIN_SEPARATOR};
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::atomic::AtomicBool;
-use self::super::apply_macros;
 use std::process::Command;
 use vswhom::VsFindResult;
 use std::borrow::Cow;
@@ -26,14 +26,16 @@ impl ResourceCompiler {
         None
     }
 
-    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(&self, out_dir: &str, prefix: &str, resource: &str, macros: Mi)
-                                                                           -> Result<String, Cow<'static, str>> {
+    pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>>(
+        &self, out_dir: &str, prefix: &str, resource: &str, parameters: ArgumentBundle<Ms, Mi, Is, Ii>)
+        -> Result<String, Cow<'static, str>> {
         let out_file = format!("{}{}{}.lib", out_dir, MAIN_SEPARATOR, prefix);
         // `.res`es are linkable under MSVC as well as normal libraries.
-        if !apply_macros(Command::new(find_windows_sdk_tool_impl("rc.exe").as_ref().map_or(Path::new("rc.exe"), Path::new))
-                             .args(&["/fo", &out_file, "/I", out_dir]),
-                         "/D",
-                         macros)
+        if !apply_parameters(Command::new(find_windows_sdk_tool_impl("rc.exe").as_ref().map_or(Path::new("rc.exe"), Path::new))
+                                 .args(&["/fo", &out_file, "/I", out_dir]),
+                             "/D",
+                             "/I",
+                             parameters)
             .arg(resource)
             .status()
             .map_err(|_| Cow::from("Are you sure you have RC.EXE in your $PATH?"))?
