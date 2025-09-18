@@ -48,6 +48,9 @@
 //!     embed_resource::compile("checksums.rc", embed_resource::NONE).manifest_optional().unwrap();
 //!     // or
 //!     embed_resource::compile("checksums.rc", &["VERSION=000901"]).manifest_required().unwrap();
+//!     // or
+//!     embed_resource::compile("checksums.rc", embed_resource::ParamsMacrosAndIncludeDirs(
+//!         &["VERSION=000901"], &["src/include"])).manifest_required().unwrap();
 //! }
 //! ```
 //!
@@ -120,6 +123,8 @@
 //!   * Lars Strojny
 //!   * EvModder
 
+#![allow(private_bounds)]
+
 
 #[cfg(any(not(target_os = "windows"), all(target_os = "windows", target_env = "msvc")))]
 extern crate cc;
@@ -155,10 +160,81 @@ use std::fmt::{self, Display};
 use std::path::{Path, PathBuf};
 
 
-/// Empty slice, properly-typed for [`compile()`] and `compile_for*()`'s macro list.
+/// Empty slice, properly-typed for [`compile()`] and `compile_for*()` to mean "no additional parameters".
 ///
 /// Rust helpfully forbids default type parameters on functions, so just passing `[]` doesn't work :)
 pub const NONE: &[&OsStr] = &[];
+
+
+// This is all of the parameters and it's non-public:
+// the only way users can construct this is via From<Mi> (same as From<ParamsMacros>) and From<ParamsMacrosAndIncludeDirs>
+struct ArgumentBundle<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>> {
+    macros: Mi,
+    include_dirs: Ii,
+}
+
+impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>> From<Mi> for ArgumentBundle<Ms, Mi, &'static &'static OsStr, &'static [&'static OsStr]> {
+    fn from(macros: Mi) -> Self {
+        ParamsMacros(macros).into()
+    }
+}
+
+/// Give this to [`compile()`] or `compile_for*()` to add some macro definitions (`-D`/`/D`).
+///
+/// Every value must be in the form `MACRO=value` or `MACRO`. An empty iterator is a no-op.
+pub struct ParamsMacros<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(pub Mi);
+impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>> From<ParamsMacros<Ms, Mi>> for ArgumentBundle<Ms, Mi, &'static &'static OsStr, &'static [&'static OsStr]> {
+    fn from(macros: ParamsMacros<Ms, Mi>) -> Self {
+        ParamsMacrosAndIncludeDirs(macros.0, NONE).into()
+    }
+}
+
+/// Give this to [`compile()`] or `compile_for*()` to add some macro definitions (`-D`/`/D`) and include directories
+/// (`-I`/`/I`).
+///
+/// Every macro value must be in the form `MACRO=value` or `MACRO`.
+///
+/// Empty iterators are no-ops.
+pub struct ParamsMacrosAndIncludeDirs<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>>(pub Mi, pub Ii);
+impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>> From<ParamsMacrosAndIncludeDirs<Ms, Mi, Is, Ii>>
+    for ArgumentBundle<Ms, Mi, Is, Ii> {
+    fn from(maid: ParamsMacrosAndIncludeDirs<Ms, Mi, Is, Ii>) -> Self {
+        Self {
+            macros: maid.0,
+            include_dirs: maid.1,
+        }
+    }
+}
+
+
+/// https://101010.pl/@nabijaczleweli/115226665478478763
+#[cfg(test)]
+#[allow(dead_code)]
+fn compat_3_0_5() {
+    use std::collections::BTreeSet;
+
+    // these spellings of the macros argument taken from GitHub "embed_resource::" search
+    //                                               and https://crates.io/crates/embed-resource/reverse_dependencies on 2025-09-18
+    let _ = compile("", std::iter::empty::<&str>());
+    let _ = compile("", None::<&str>);
+    let marcos = &[format!("VERSION_PATCH={}", env!("CARGO_PKG_VERSION_PATCH"))];
+    let _ = compile("", marcos);
+    let marcos = vec![format!("VERSION_PATCH={}", env!("CARGO_PKG_VERSION_PATCH"))];
+    let _ = compile("", marcos);
+
+    // these weren't
+    let _ = compile("", [""]);
+    let _ = compile("", &[""]);
+    let _ = compile("", vec![""]);
+    let _ = compile("", vec![Path::new("gaming=baming")].into_iter().collect::<BTreeSet<_>>());
+    let _ = compile("", vec![Path::new("gaming=baming").to_owned()].into_iter().collect::<BTreeSet<_>>());
+    let _ = compile("", [PathBuf::from("gaming=baming")].iter());
+    let _ = compile("", [PathBuf::from("gaming=baming")].iter().collect::<BTreeSet<_>>());
+
+    // this is new
+    let _ = compile("", ParamsMacrosAndIncludeDirs(NONE, NONE));
+    let _ = compile("", ParamsMacrosAndIncludeDirs([""], [""]));
+}
 
 
 /// Result of [`compile()`] and `compile_for*()`
@@ -246,7 +322,8 @@ macro_rules! try_compile_impl {
 /// Since rustc 1.50.0, the resource is linked only to the binaries
 /// (unless there are none, in which case it's also linked to the library).
 ///
-/// `macros` are a list of macros to define, in standard `NAME`/`NAME=VALUE` format.
+/// `parameters` are a list of macros to define (directly or via [`ParamsMacros`]), in standard `NAME`/`NAME=VALUE` format,
+/// or [`ParamsMacrosAndIncludeDirs`].
 ///
 /// # Examples
 ///
@@ -260,8 +337,15 @@ macro_rules! try_compile_impl {
 ///     embed_resource::compile("checksums.rc", embed_resource::NONE);
 /// }
 /// ```
-pub fn compile<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) -> CompilationResult {
-    let (prefix, out_dir, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), macros));
+pub fn compile<T: AsRef<Path>,
+               Ms: AsRef<OsStr>,
+               Mi: IntoIterator<Item = Ms>,
+               Is: AsRef<OsStr>,
+               Ii: IntoIterator<Item = Is>,
+               P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
+    resource_file: T, parameters: P)
+    -> CompilationResult {
+    let (prefix, out_dir, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into().macros));
     let hasbins = fs::read_to_string("Cargo.toml")
         .unwrap_or_else(|err| {
             eprintln!("Couldn't read Cargo.toml: {}; assuming src/main.rs or S_ISDIR(src/bin/)", err);
@@ -301,10 +385,17 @@ pub fn compile<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(re
 ///     embed_resource::compile_for("assets/uninstaller.rc", &["unins001"], embed_resource::NONE);
 /// }
 /// ```
-pub fn compile_for<T: AsRef<Path>, J: Display, I: IntoIterator<Item = J>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, for_bins: I,
-                                                                                                                         macros: Mi)
-                                                                                                                         -> CompilationResult {
-    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), macros));
+pub fn compile_for<T: AsRef<Path>,
+                   J: Display,
+                   I: IntoIterator<Item = J>,
+                   Ms: AsRef<OsStr>,
+                   Mi: IntoIterator<Item = Ms>,
+                   Is: AsRef<OsStr>,
+                   Ii: IntoIterator<Item = Is>,
+                   P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
+    resource_file: T, for_bins: I, parameters: P)
+    -> CompilationResult {
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into().macros));
     for bin in for_bins {
         println!("cargo:rustc-link-arg-bin={}={}", bin, out_file);
     }
@@ -315,8 +406,15 @@ pub fn compile_for<T: AsRef<Path>, J: Display, I: IntoIterator<Item = J>, Ms: As
 /// prefer [`compile_for_everything()`]).
 ///
 /// Only available since rustc 1.60.0, does nothing before.
-pub fn compile_for_tests<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) -> CompilationResult {
-    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), macros));
+pub fn compile_for_tests<T: AsRef<Path>,
+                         Ms: AsRef<OsStr>,
+                         Mi: IntoIterator<Item = Ms>,
+                         Is: AsRef<OsStr>,
+                         Ii: IntoIterator<Item = Is>,
+                         P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
+    resource_file: T, parameters: P)
+    -> CompilationResult {
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into().macros));
     println!("cargo:rustc-link-arg-tests={}", out_file);
     CompilationResult::Ok
 }
@@ -324,8 +422,15 @@ pub fn compile_for_tests<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item
 /// Likewise, but only link the resource to benchmarks.
 ///
 /// Only available since rustc 1.60.0, does nothing before.
-pub fn compile_for_benchmarks<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) -> CompilationResult {
-    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), macros));
+pub fn compile_for_benchmarks<T: AsRef<Path>,
+                              Ms: AsRef<OsStr>,
+                              Mi: IntoIterator<Item = Ms>,
+                              Is: AsRef<OsStr>,
+                              Ii: IntoIterator<Item = Is>,
+                              P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
+    resource_file: T, parameters: P)
+    -> CompilationResult {
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into().macros));
     println!("cargo:rustc-link-arg-benches={}", out_file);
     CompilationResult::Ok
 }
@@ -333,8 +438,15 @@ pub fn compile_for_benchmarks<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator
 /// Likewise, but only link the resource to examples.
 ///
 /// Only available since rustc 1.60.0, does nothing before.
-pub fn compile_for_examples<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) -> CompilationResult {
-    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), macros));
+pub fn compile_for_examples<T: AsRef<Path>,
+                            Ms: AsRef<OsStr>,
+                            Mi: IntoIterator<Item = Ms>,
+                            Is: AsRef<OsStr>,
+                            Ii: IntoIterator<Item = Is>,
+                            P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
+    resource_file: T, parameters: P)
+    -> CompilationResult {
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into().macros));
     println!("cargo:rustc-link-arg-examples={}", out_file);
     CompilationResult::Ok
 }
@@ -343,13 +455,22 @@ pub fn compile_for_examples<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<I
 /// benchmarks, &c.
 ///
 /// Only available since rustc 1.50.0, does nothing before.
-pub fn compile_for_everything<T: AsRef<Path>, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: T, macros: Mi) -> CompilationResult {
-    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), macros));
+pub fn compile_for_everything<T: AsRef<Path>,
+                              Ms: AsRef<OsStr>,
+                              Mi: IntoIterator<Item = Ms>,
+                              Is: AsRef<OsStr>,
+                              Ii: IntoIterator<Item = Is>,
+                              P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
+    resource_file: T, parameters: P)
+    -> CompilationResult {
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into().macros));
     println!("cargo:rustc-link-arg={}", out_file);
     CompilationResult::Ok
 }
 
-fn compile_impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: &Path, macros: Mi) -> Result<(&str, String, String), CompilationResult> {
+fn compile_impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>, P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
+    resource_file: &Path, parameters: P)
+    -> Result<(&str, String, String), CompilationResult> {
     let mut comp = ResourceCompiler::new();
     if let Some(missing) = comp.is_supported() {
         if missing.is_empty() {
@@ -361,7 +482,10 @@ fn compile_impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(resource_file: &P
         let prefix = &resource_file.file_stem().expect("resource_file has no stem").to_str().expect("resource_file's stem not UTF-8");
         let out_dir = env::var("OUT_DIR").expect("No OUT_DIR env var");
 
-        let out_file = comp.compile_resource(&out_dir, &prefix, resource_file.to_str().expect("resource_file not UTF-8"), macros)
+        let out_file = comp.compile_resource(&out_dir,
+                              &prefix,
+                              resource_file.to_str().expect("resource_file not UTF-8"),
+                              parameters.into().macros)
             .map_err(CompilationResult::Failed)?;
         Ok((prefix, out_dir, out_file))
     }
