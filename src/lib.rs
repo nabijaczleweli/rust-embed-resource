@@ -169,12 +169,12 @@ pub const NONE: &[&OsStr] = &[];
 // This is all of the parameters and it's non-public:
 // the only way users can construct this is via From<Mi> (same as From<ParamsMacros>) and From<ParamsMacrosAndIncludeDirs>
 #[derive(PartialEq, Eq, Debug)] // only for tests
-struct ArgumentBundle<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>> {
+struct ParameterBundle<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>> {
     macros: Mi,
     include_dirs: Ii,
 }
 
-impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>> From<Mi> for ArgumentBundle<Ms, Mi, &'static &'static OsStr, &'static [&'static OsStr]> {
+impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>> From<Mi> for ParameterBundle<Ms, Mi, &'static &'static OsStr, &'static [&'static OsStr]> {
     fn from(macros: Mi) -> Self {
         ParamsMacros(macros).into()
     }
@@ -184,7 +184,7 @@ impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>> From<Mi> for ArgumentBundle<
 ///
 /// Every value must be in the form `MACRO=value` or `MACRO`. An empty iterator is a no-op.
 pub struct ParamsMacros<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(pub Mi);
-impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>> From<ParamsMacros<Ms, Mi>> for ArgumentBundle<Ms, Mi, &'static &'static OsStr, &'static [&'static OsStr]> {
+impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>> From<ParamsMacros<Ms, Mi>> for ParameterBundle<Ms, Mi, &'static &'static OsStr, &'static [&'static OsStr]> {
     fn from(macros: ParamsMacros<Ms, Mi>) -> Self {
         ParamsMacrosAndIncludeDirs(macros.0, NONE).into()
     }
@@ -198,7 +198,7 @@ impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>> From<ParamsMacros<Ms, Mi>> f
 /// Empty iterators are no-ops.
 pub struct ParamsMacrosAndIncludeDirs<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>>(pub Mi, pub Ii);
 impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>> From<ParamsMacrosAndIncludeDirs<Ms, Mi, Is, Ii>>
-    for ArgumentBundle<Ms, Mi, Is, Ii> {
+    for ParameterBundle<Ms, Mi, Is, Ii> {
     fn from(maid: ParamsMacrosAndIncludeDirs<Ms, Mi, Is, Ii>) -> Self {
         Self {
             macros: maid.0,
@@ -239,45 +239,45 @@ fn compat_3_0_5() {
 
 #[test]
 fn argument_bundle_into() {
-    assert_eq!(ArgumentBundle::from(NONE),
-               ArgumentBundle {
+    assert_eq!(ParameterBundle::from(NONE),
+               ParameterBundle {
                    macros: NONE,
                    include_dirs: NONE,
                });
-    assert_eq!(ArgumentBundle::from([""]),
-               ArgumentBundle {
+    assert_eq!(ParameterBundle::from([""]),
+               ParameterBundle {
                    macros: [""],
                    include_dirs: NONE,
                });
 
-    assert_eq!(ArgumentBundle::from(ParamsMacros(NONE)),
-               ArgumentBundle {
+    assert_eq!(ParameterBundle::from(ParamsMacros(NONE)),
+               ParameterBundle {
                    macros: NONE,
                    include_dirs: NONE,
                });
-    assert_eq!(ArgumentBundle::from(ParamsMacros([""])),
-               ArgumentBundle {
+    assert_eq!(ParameterBundle::from(ParamsMacros([""])),
+               ParameterBundle {
                    macros: [""],
                    include_dirs: NONE,
                });
 
-    assert_eq!(ArgumentBundle::from(ParamsMacrosAndIncludeDirs(NONE, NONE)),
-               ArgumentBundle {
+    assert_eq!(ParameterBundle::from(ParamsMacrosAndIncludeDirs(NONE, NONE)),
+               ParameterBundle {
                    macros: NONE,
                    include_dirs: NONE,
                });
-    assert_eq!(ArgumentBundle::from(ParamsMacrosAndIncludeDirs([""], NONE)),
-               ArgumentBundle {
+    assert_eq!(ParameterBundle::from(ParamsMacrosAndIncludeDirs([""], NONE)),
+               ParameterBundle {
                    macros: [""],
                    include_dirs: NONE,
                });
-    assert_eq!(ArgumentBundle::from(ParamsMacrosAndIncludeDirs(NONE, [""])),
-               ArgumentBundle {
+    assert_eq!(ParameterBundle::from(ParamsMacrosAndIncludeDirs(NONE, [""])),
+               ParameterBundle {
                    macros: NONE,
                    include_dirs: [""],
                });
-    assert_eq!(ArgumentBundle::from(ParamsMacrosAndIncludeDirs([""], [""])),
-               ArgumentBundle {
+    assert_eq!(ParameterBundle::from(ParamsMacrosAndIncludeDirs([""], [""])),
+               ParameterBundle {
                    macros: [""],
                    include_dirs: [""],
                });
@@ -389,7 +389,7 @@ pub fn compile<T: AsRef<Path>,
                Mi: IntoIterator<Item = Ms>,
                Is: AsRef<OsStr>,
                Ii: IntoIterator<Item = Is>,
-               P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
+               P: Into<ParameterBundle<Ms, Mi, Is, Ii>>>(
     resource_file: T, parameters: P)
     -> CompilationResult {
     let (prefix, out_dir, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into()));
@@ -439,7 +439,7 @@ pub fn compile_for<T: AsRef<Path>,
                    Mi: IntoIterator<Item = Ms>,
                    Is: AsRef<OsStr>,
                    Ii: IntoIterator<Item = Is>,
-                   P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
+                   P: Into<ParameterBundle<Ms, Mi, Is, Ii>>>(
     resource_file: T, for_bins: I, parameters: P)
     -> CompilationResult {
     let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into()));
@@ -458,7 +458,7 @@ pub fn compile_for_tests<T: AsRef<Path>,
                          Mi: IntoIterator<Item = Ms>,
                          Is: AsRef<OsStr>,
                          Ii: IntoIterator<Item = Is>,
-                         P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
+                         P: Into<ParameterBundle<Ms, Mi, Is, Ii>>>(
     resource_file: T, parameters: P)
     -> CompilationResult {
     let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into()));
@@ -474,7 +474,7 @@ pub fn compile_for_benchmarks<T: AsRef<Path>,
                               Mi: IntoIterator<Item = Ms>,
                               Is: AsRef<OsStr>,
                               Ii: IntoIterator<Item = Is>,
-                              P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
+                              P: Into<ParameterBundle<Ms, Mi, Is, Ii>>>(
     resource_file: T, parameters: P)
     -> CompilationResult {
     let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into()));
@@ -490,7 +490,7 @@ pub fn compile_for_examples<T: AsRef<Path>,
                             Mi: IntoIterator<Item = Ms>,
                             Is: AsRef<OsStr>,
                             Ii: IntoIterator<Item = Is>,
-                            P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
+                            P: Into<ParameterBundle<Ms, Mi, Is, Ii>>>(
     resource_file: T, parameters: P)
     -> CompilationResult {
     let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into()));
@@ -507,7 +507,7 @@ pub fn compile_for_everything<T: AsRef<Path>,
                               Mi: IntoIterator<Item = Ms>,
                               Is: AsRef<OsStr>,
                               Ii: IntoIterator<Item = Is>,
-                              P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
+                              P: Into<ParameterBundle<Ms, Mi, Is, Ii>>>(
     resource_file: T, parameters: P)
     -> CompilationResult {
     let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into()));
@@ -515,7 +515,7 @@ pub fn compile_for_everything<T: AsRef<Path>,
     CompilationResult::Ok
 }
 
-fn compile_impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>, P: Into<ArgumentBundle<Ms, Mi, Is, Ii>>>(
+fn compile_impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>, P: Into<ParameterBundle<Ms, Mi, Is, Ii>>>(
     resource_file: &Path, parameters: P)
     -> Result<(&str, String, String), CompilationResult> {
     let mut comp = ResourceCompiler::new();
@@ -537,10 +537,10 @@ fn compile_impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>,
 
 fn apply_parameters<'t, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>>(to: &'t mut Command, macro_pref: &str,
                                                                                                                       include_dir_pref: &str,
-                                                                                                                      parameters: ArgumentBundle<Ms,
-                                                                                                                                                 Mi,
-                                                                                                                                                 Is,
-                                                                                                                                                 Ii>)
+                                                                                                                      parameters: ParameterBundle<Ms,
+                                                                                                                                                  Mi,
+                                                                                                                                                  Is,
+                                                                                                                                                  Ii>)
                                                                                                                       -> &'t mut Command {
     for m in parameters.macros {
         to.arg(macro_pref).arg(m);

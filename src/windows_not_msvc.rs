@@ -1,4 +1,4 @@
-use self::super::{ArgumentBundle, apply_parameters};
+use self::super::{ParameterBundle, apply_parameters};
 use std::path::{PathBuf, MAIN_SEPARATOR};
 use std::process::Command;
 use std::borrow::Cow;
@@ -22,7 +22,7 @@ impl ResourceCompiler {
     }
 
     pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>>(
-        &self, out_dir: &str, prefix: &str, resource: &str, parameters: ArgumentBundle<Ms, Mi, Is, Ii>)
+        &self, out_dir: &str, prefix: &str, resource: &str, parameters: ParameterBundle<Ms, Mi, Is, Ii>)
         -> Result<String, Cow<'static, str>> {
         let out_file = format!("{}{}lib{}.a", out_dir, MAIN_SEPARATOR, prefix);
 
