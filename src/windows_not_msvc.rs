@@ -43,7 +43,8 @@ impl ResourceCompiler {
                                    .args(&["--input", resource, "--output-format=coff", "--target"])
                                    .arg(target)
                                    .args(&["--output", &out_file, "--include-dir", out_dir]),
-                               "-D","-I",
+                               "-D",
+                               "-I",
                                parameters)
             .status() {
             Ok(stat) if stat.success() => Ok(out_file),

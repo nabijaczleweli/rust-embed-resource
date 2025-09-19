@@ -168,6 +168,7 @@ pub const NONE: &[&OsStr] = &[];
 
 // This is all of the parameters and it's non-public:
 // the only way users can construct this is via From<Mi> (same as From<ParamsMacros>) and From<ParamsMacrosAndIncludeDirs>
+#[derive(PartialEq, Eq, Debug)] // only for tests
 struct ArgumentBundle<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>> {
     macros: Mi,
     include_dirs: Ii,
@@ -234,6 +235,52 @@ fn compat_3_0_5() {
     // this is new
     let _ = compile("", ParamsMacrosAndIncludeDirs(NONE, NONE));
     let _ = compile("", ParamsMacrosAndIncludeDirs([""], [""]));
+}
+
+#[test]
+fn argument_bundle_into() {
+    assert_eq!(ArgumentBundle::from(NONE),
+               ArgumentBundle {
+                   macros: NONE,
+                   include_dirs: NONE,
+               });
+    assert_eq!(ArgumentBundle::from([""]),
+               ArgumentBundle {
+                   macros: [""],
+                   include_dirs: NONE,
+               });
+
+    assert_eq!(ArgumentBundle::from(ParamsMacros(NONE)),
+               ArgumentBundle {
+                   macros: NONE,
+                   include_dirs: NONE,
+               });
+    assert_eq!(ArgumentBundle::from(ParamsMacros([""])),
+               ArgumentBundle {
+                   macros: [""],
+                   include_dirs: NONE,
+               });
+
+    assert_eq!(ArgumentBundle::from(ParamsMacrosAndIncludeDirs(NONE, NONE)),
+               ArgumentBundle {
+                   macros: NONE,
+                   include_dirs: NONE,
+               });
+    assert_eq!(ArgumentBundle::from(ParamsMacrosAndIncludeDirs([""], NONE)),
+               ArgumentBundle {
+                   macros: [""],
+                   include_dirs: NONE,
+               });
+    assert_eq!(ArgumentBundle::from(ParamsMacrosAndIncludeDirs(NONE, [""])),
+               ArgumentBundle {
+                   macros: NONE,
+                   include_dirs: [""],
+               });
+    assert_eq!(ArgumentBundle::from(ParamsMacrosAndIncludeDirs([""], [""])),
+               ArgumentBundle {
+                   macros: [""],
+                   include_dirs: [""],
+               });
 }
 
 
