@@ -60,6 +60,10 @@
 //! Use `.manifest_optional().unwrap()` if the manifest is cosmetic (like an icon).<br />
 //! Use `.manifest_required().unwrap()` if the manifest is required (security, entry point, &c.).
 //!
+//! Parameters that look like `&["string"]` or `embed_resource::NONE` in the example above
+//! can be anything that satisfies `IntoIterator<AsRef<OsStr>>`:
+//! `&[&str]`, of course, but also `Option<PathBuf>`, `Vec<OsString>`, &c.
+//!
 //! ## Errata
 //!
 //! If no `cargo:rerun-if-changed` annotations are generated, Cargo scans the entire build root by default.
@@ -88,7 +92,7 @@
 //! ## Migration
 //! ### 2.x
 //!
-//! Add `embed_resource::NONE` as the last argument to `embed_resource::compile()` and  `embed_resource::compile_for()`.
+//! Add `embed_resource::NONE` as the last argument to `embed_resource::compile()` and `embed_resource::compile_for()`.
 //!
 //! ### 3.x
 //!
