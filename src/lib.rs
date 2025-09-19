@@ -62,7 +62,7 @@
 //!
 //! Parameters that look like `&["string"]` or `embed_resource::NONE` in the example above
 //! can be anything that satisfies `IntoIterator<AsRef<OsStr>>`:
-//! `&[&str]`, of course, but also `Option<PathBuf>`, `Vec<OsString>`, &c.
+//! `&[&str]`, of course, but also `Option<PathBuf>`, `Vec<OsString>`, `BTreeSet<&Path>`, &c.
 //!
 //! ## Errata
 //!
