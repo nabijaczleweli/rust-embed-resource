@@ -4,6 +4,9 @@
 extern crate embed_resource;
 
 
+use std::borrow::Cow;
+use std::path::Path;
+use std::ffi::OsStr;
 use std::env;
 
 
@@ -21,7 +24,9 @@ fn main() {
 
     env::set_var("OUT_DIR", ".");
 
-    let resource = env::args().nth(1).expect("Specify the resource file to be compiled as the first argument.");
+    let mut args = env::args_os();
+    let argv0 = args.next().map(Cow::from).unwrap_or(Cow::from(OsStr::new("rust-embed-resource")));
+    let resource = args.next().unwrap_or_else(|| panic!("usage: {} resource", Path::new(&*argv0).display()));
     embed_resource::compile(&resource, &["VERSION=\"0.5.0\""]).manifest_required().unwrap();
     embed_resource::compile_for(&resource, &["embed_resource", "embed_resource-installer"], embed_resource::NONE).manifest_required().unwrap();
 }
