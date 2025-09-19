@@ -131,7 +131,7 @@ impl Compiler {
                 try_command(apply_parameters(Command::new(&self.executable[..])
                                                  .args(&["--input", resource, "--output-format=coff", "--output", &out_file, "--include-dir", out_dir]),
                                              "-D",
-                                             "-I",
+                                             "--include-dir",
                                              parameters),
                             Path::new(&self.executable[..]),
                             "compile",
