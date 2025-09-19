@@ -22,6 +22,16 @@ fn main() {
     env::set_var("OUT_DIR", ".");
 
     let resource = env::args().nth(1).expect("Specify the resource file to be compiled as the first argument.");
-    embed_resource::compile(&resource, &["VERSION=\"0.5.0\""]).manifest_required().unwrap();
-    embed_resource::compile_for(&resource, &["embed_resource", "embed_resource-installer"], embed_resource::NONE).manifest_required().unwrap();
+
+    let include_dirs = match env::args().nth(2) {
+        Some(param) => vec![param],
+        None => vec![],
+    };
+    let parameters = embed_resource::ParamsMacrosAndIncludeDirs(&["VERSION=\"0.5.0\""], include_dirs.as_slice());
+    embed_resource::compile(&resource, parameters).manifest_required().unwrap();
+
+    // Use ParamsIncludeDirs to explicitly mark Path as include directory
+    embed_resource::compile_for(&resource, &["embed_resource", "embed_resource-installer"], embed_resource::ParamsIncludeDirs(include_dirs.as_slice()))
+        .manifest_required()
+        .unwrap();
 }

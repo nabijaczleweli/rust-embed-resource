@@ -206,6 +206,34 @@ impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIt
     }
 }
 
+/// Give this to [`compile()`] or `compile_for*()` to add include directories (`-I`/`/I`) only.
+/// 
+/// This is a convenience wrapper that treats Path-based arrays as include directories,
+/// not macro definitions. Use this when you want to pass Path/PathBuf arrays and ensure
+/// they are treated as include directories.
+/// 
+/// # Examples
+/// 
+/// ```rust,no_run
+/// // Unambiguously specify include directories
+/// embed_resource::compile("app.rc", 
+///     embed_resource::ParamsIncludeDirs(&[std::path::Path::new("include")]));
+///     
+/// // Works with PathBuf too  
+/// embed_resource::compile("app.rc",
+///     embed_resource::ParamsIncludeDirs(vec![std::path::PathBuf::from("include")]));
+/// ```
+pub struct ParamsIncludeDirs<Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>>(pub Ii);
+impl<Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>> From<ParamsIncludeDirs<Is, Ii>>
+    for ArgumentBundle<&'static &'static OsStr, &'static [&'static OsStr], Is, Ii> {
+    fn from(params: ParamsIncludeDirs<Is, Ii>) -> Self {
+        Self {
+            macros: NONE,
+            include_dirs: params.0,
+        }
+    }
+}
+
 
 /// https://101010.pl/@nabijaczleweli/115226665478478763
 #[cfg(test)]
@@ -230,6 +258,11 @@ fn compat_3_0_5() {
     let _ = compile("", vec![Path::new("gaming=baming").to_owned()].into_iter().collect::<BTreeSet<_>>());
     let _ = compile("", [PathBuf::from("gaming=baming")].iter());
     let _ = compile("", [PathBuf::from("gaming=baming")].iter().collect::<BTreeSet<_>>());
+
+    // Use ParamsIncludeDirs to explicitly mark Path arrays as include directories
+    let _ = compile("", ParamsIncludeDirs(&[Path::new("include_dir")]));
+    let _ = compile("", ParamsIncludeDirs([PathBuf::from("include_dir")]));
+    let _ = compile("", ParamsIncludeDirs(vec![Path::new("include_dir1"), Path::new("include_dir2")]));
 
     // this is new
     let _ = compile("", ParamsMacrosAndIncludeDirs(NONE, NONE));
