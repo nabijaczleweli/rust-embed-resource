@@ -51,6 +51,9 @@
 //!     // or
 //!     embed_resource::compile("checksums.rc", embed_resource::ParamsMacrosAndIncludeDirs(
 //!         &["VERSION=000901"], &["src/include"])).manifest_required().unwrap();
+//!     // or
+//!     embed_resource::compile("checksums.rc", embed_resource::ParamsIncludeDirs(
+//!         &["src/include"])).manifest_required().unwrap();
 //! }
 //! ```
 //!
@@ -167,7 +170,8 @@ pub const NONE: &[&OsStr] = &[];
 
 
 // This is all of the parameters and it's non-public:
-// the only way users can construct this is via From<Mi> (same as From<ParamsMacros>) and From<ParamsMacrosAndIncludeDirs>
+// the only way users can construct this is via From<Mi> (same as From<ParamsMacros>), From<ParamsIncludeDirs>,
+// and From<ParamsMacrosAndIncludeDirs>
 #[derive(PartialEq, Eq, Debug)] // only for tests
 struct ParameterBundle<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>> {
     macros: Mi,
@@ -187,6 +191,17 @@ pub struct ParamsMacros<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>>(pub Mi);
 impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>> From<ParamsMacros<Ms, Mi>> for ParameterBundle<Ms, Mi, &'static &'static OsStr, &'static [&'static OsStr]> {
     fn from(macros: ParamsMacros<Ms, Mi>) -> Self {
         ParamsMacrosAndIncludeDirs(macros.0, NONE).into()
+    }
+}
+
+/// Give this to [`compile()`] or `compile_for*()` to add include directories (`-I`/`/I`).
+///
+/// An empty iterator is a no-op.
+pub struct ParamsIncludeDirs<Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>>(pub Ii);
+impl<Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>> From<ParamsIncludeDirs<Is, Ii>>
+    for ParameterBundle<&'static &'static OsStr, &'static [&'static OsStr], Is, Ii> {
+    fn from(include_dirs: ParamsIncludeDirs<Is, Ii>) -> Self {
+        ParamsMacrosAndIncludeDirs(NONE, include_dirs.0).into()
     }
 }
 
@@ -233,6 +248,10 @@ fn compat_3_0_5() {
     let _ = compile("", [PathBuf::from("gaming=baming")].iter().collect::<BTreeSet<_>>());
 
     // this is new
+    let _ = compile("", ParamsIncludeDirs(&[Path::new("include_dir")]));
+    let _ = compile("", ParamsIncludeDirs([PathBuf::from("include_dir")]));
+    let _ = compile("", ParamsIncludeDirs(vec![Path::new("include_dir1"), Path::new("include_dir2")]));
+
     let _ = compile("", ParamsMacrosAndIncludeDirs(NONE, NONE));
     let _ = compile("", ParamsMacrosAndIncludeDirs([""], [""]));
 }
@@ -259,6 +278,17 @@ fn argument_bundle_into() {
                ParameterBundle {
                    macros: [""],
                    include_dirs: NONE,
+               });
+
+    assert_eq!(ParameterBundle::from(ParamsIncludeDirs(NONE)),
+               ParameterBundle {
+                   macros: NONE,
+                   include_dirs: NONE,
+               });
+    assert_eq!(ParameterBundle::from(ParamsIncludeDirs([""])),
+               ParameterBundle {
+                   macros: NONE,
+                   include_dirs: [""],
                });
 
     assert_eq!(ParameterBundle::from(ParamsMacrosAndIncludeDirs(NONE, NONE)),
@@ -370,7 +400,7 @@ macro_rules! try_compile_impl {
 /// (unless there are none, in which case it's also linked to the library).
 ///
 /// `parameters` are a list of macros to define (directly or via [`ParamsMacros`]), in standard `NAME`/`NAME=VALUE` format,
-/// or [`ParamsMacrosAndIncludeDirs`].
+/// [`ParamsIncludeDirs`], or [`ParamsMacrosAndIncludeDirs`].
 ///
 /// # Examples
 ///
