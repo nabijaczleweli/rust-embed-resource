@@ -42,6 +42,7 @@ impl ResourceCompiler {
         match apply_parameters(Command::new("windres")
                                    .args(&["--input", resource, "--output-format=coff", "--target"])
                                    .arg(target)
+                                   .args(&["-c", "65001"]) // UTF-8, cf. https://github.com/nabijaczleweli/rust-embed-resource/pull/73
                                    .args(&["--output", &out_file, "--include-dir", out_dir]),
                                "-D",
                                "-I",
