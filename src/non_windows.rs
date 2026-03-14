@@ -1,9 +1,9 @@
 use self::super::{ParameterBundle, env_target_and_rc, apply_parameters};
 use std::process::{Command, Stdio};
+use std::ffi::{OsString, OsStr};
 use std::path::{PathBuf, Path};
-use std::{env, fs, mem};
 use std::borrow::Cow;
-use std::ffi::OsStr;
+use std::{fs, mem};
 use memchr::memmem;
 
 
@@ -64,7 +64,7 @@ impl Compiler {
             if is_runnable(&executable) {
                 return Ok(Compiler {
                     tp: CompilerType::WindRes,
-                    executable: executable.into(),
+                    executable: OsString::from(executable).into(),
                 });
             } else {
                 return Err(executable.into());
@@ -80,7 +80,7 @@ impl Compiler {
                             .map(|out| memmem::find(&out.stdout, b"no-preprocess").is_some())
                             .unwrap_or(false),
                     },
-                    executable: "llvm-rc".into(),
+                    executable: OsStr::new("llvm-rc").into(),
                 });
             } else {
                 return Err("llvm-rc".into());
@@ -105,7 +105,7 @@ impl Compiler {
                               .include(out_dir)
                               .expand()).map_err(|e| e.to_string())?;
 
-                try_command(Command::new(&self.executable[..])
+                try_command(Command::new(&self.executable)
                                 .args(&["/fo", &out_file])
                                 .args(&["/C", "65001"]) // UTF-8, cf. https://github.com/nabijaczleweli/rust-embed-resource/pull/73
                                 .args(if has_no_preprocess {
@@ -119,18 +119,18 @@ impl Compiler {
                                 .args(&["--", &preprocessed_path])
                                 .stdin(Stdio::piped())
                                 .current_dir(or_curdir(Path::new(resource).parent().expect("Resource parent nonexistent?"))),
-                            Path::new(&self.executable[..]),
+                            Path::new(&self.executable),
                             "compile",
                             &preprocessed_path,
                             &out_file)?;
             }
             CompilerType::WindRes => {
-                try_command(apply_parameters(Command::new(&self.executable[..])
+                try_command(apply_parameters(Command::new(&self.executable)
                                                  .args(&["--input", resource, "--output-format=coff", "--output", &out_file, "--include-dir", out_dir]),
                                              "-D",
                                              "--include-dir",
                                              parameters),
-                            Path::new(&self.executable[..]),
+                            Path::new(&self.executable),
                             "compile",
                             resource,
                             &out_file)?;
@@ -198,10 +198,10 @@ fn guess_compiler_variant(s: OsString) -> Result<Compiler, Cow<'static, str>> {
                     tp: CompilerType::LlvmRc { has_no_preprocess: memmem::find(&out.stdout, b"no-preprocess").is_some() },
                 })
             } else {
-                Err(format!("Unknown RC compiler variant: {}", s).into())
+                Err(format!("Unknown RC compiler variant: {}", s.display()).into())
             }
         }
-        Err(err) => Err(format!("Couldn't execute {}: {}", s, err).into()),
+        Err(err) => Err(format!("Couldn't execute {}: {}", s.display(), err).into()),
     }
 }
 
