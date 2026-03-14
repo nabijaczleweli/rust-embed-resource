@@ -31,7 +31,7 @@ impl ResourceCompiler {
         -> Result<String, Cow<'static, str>> {
         let out_file = format!("{}{}{}.lib", out_dir, MAIN_SEPARATOR, prefix);
         let (_, rc) = env_target_and_rc()?;
-        let rc = rc.map(PathBuf::from).ok_or_else(|| find_windows_sdk_tool_impl("rc.exe"));
+        let rc = rc.map(PathBuf::from).or_else(|| find_windows_sdk_tool_impl("rc.exe"));
         // `.res`es are linkable under MSVC as well as normal libraries.
         if !apply_parameters(Command::new(rc.as_deref().unwrap_or(Path::new("rc.exe"))).args(&["/fo", &out_file, "/I", out_dir]),
                              "/D",
