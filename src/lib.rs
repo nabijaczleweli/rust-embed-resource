@@ -611,7 +611,7 @@ fn apply_parameters<'t, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef
 /// let vs_locations = vswhom::VsFindResult::search().unwrap();
 /// let output = Command::new(midl)
 ///     .env("PATH", vs_locations.vs_exe_path.unwrap())
-///     .args(&["/out", &env::var("OUT_DIR").unwrap()])
+///     .arg("/out").arg(env::var("OUT_DIR").unwrap())
 ///     .arg("haka.pfx.idl").output().unwrap();
 ///
 /// assert!(output.status.success());
