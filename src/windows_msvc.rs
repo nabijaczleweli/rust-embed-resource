@@ -1,4 +1,4 @@
-use self::super::{ParameterBundle, apply_parameters};
+use self::super::{ParameterBundle, env_target_and_rc, apply_parameters};
 use std::path::{PathBuf, Path, MAIN_SEPARATOR};
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::atomic::AtomicBool;
@@ -30,15 +30,16 @@ impl ResourceCompiler {
         &self, out_dir: &str, prefix: &str, resource: &str, parameters: ParameterBundle<Ms, Mi, Is, Ii>)
         -> Result<String, Cow<'static, str>> {
         let out_file = format!("{}{}{}.lib", out_dir, MAIN_SEPARATOR, prefix);
+        let (_, rc) = env_target_and_rc()?;
+        let rc = rc.map(PathBuf::from).ok_or_else(|| find_windows_sdk_tool_impl("rc.exe"));
         // `.res`es are linkable under MSVC as well as normal libraries.
-        if !apply_parameters(Command::new(find_windows_sdk_tool_impl("rc.exe").as_ref().map_or(Path::new("rc.exe"), Path::new))
-                                 .args(&["/fo", &out_file, "/I", out_dir]),
+        if !apply_parameters(Command::new(rc.as_deref().unwrap_or(Path::new("rc.exe"))).args(&["/fo", &out_file, "/I", out_dir]),
                              "/D",
                              "/I",
                              parameters)
             .arg(resource)
             .status()
-            .map_err(|_| Cow::from("Are you sure you have RC.EXE in your $PATH?"))?
+            .map_err(|_| Cow::from("Are you sure you have RC.EXE in your $PATH or ${RC_$TARGET} or $RC is set?"))?
             .success() {
             return Err("RC.EXE failed to compile specified resource file".into());
         }

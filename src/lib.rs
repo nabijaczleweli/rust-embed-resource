@@ -159,7 +159,7 @@ use self::windows_msvc::*;
 use self::windows_not_msvc::*;
 
 use std::{env, fs};
-use std::ffi::OsStr;
+use std::ffi::{OsString, OsStr};
 use std::borrow::Cow;
 use std::process::Command;
 use toml::Table as TomlTable;
@@ -619,4 +619,12 @@ fn apply_parameters<'t, Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef
 /// ```
 pub fn find_windows_sdk_tool<T: AsRef<str>>(tool: T) -> Option<PathBuf> {
     find_windows_sdk_tool_impl(tool.as_ref())
+}
+
+
+#[allow(unused)]
+fn env_target_and_rc() -> Result<(String, Option<OsString>), Cow<'static, str>> {
+    let target = env::var("TARGET").map_err(|_| Cow::from("no $TARGET"))?;
+    let rc = env::var_os(&format!("RC_{}", target)).or_else(|| env::var_os(&format!("RC_{}", target.replace('-', "_")))).or_else(|| env::var_os("RC"));
+    Ok((target, rc))
 }

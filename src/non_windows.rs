@@ -1,4 +1,4 @@
-use self::super::{ParameterBundle, apply_parameters};
+use self::super::{ParameterBundle, env_target_and_rc, apply_parameters};
 use std::process::{Command, Stdio};
 use std::path::{PathBuf, Path};
 use std::{env, fs, mem};
@@ -49,17 +49,14 @@ enum CompilerType {
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 struct Compiler {
     tp: CompilerType,
-    executable: Cow<'static, str>,
+    executable: Cow<'static, OsStr>,
 }
 
 impl Compiler {
     pub fn probe() -> Result<Compiler, Cow<'static, str>> {
-        let target = env::var("TARGET").map_err(|_| Cow::from("no $TARGET"))?;
-
-        if let Ok(rc) = env::var(&format!("RC_{}", target))
-            .or_else(|_| env::var(&format!("RC_{}", target.replace('-', "_"))))
-            .or_else(|_| env::var("RC")) {
-            return guess_compiler_variant(&rc);
+        let (target, rc) = env_target_and_rc()?;
+        if let Some(rc) = rc {
+            return guess_compiler_variant(rc);
         }
 
         if target.ends_with("-windows-gnu") || target.ends_with("-windows-gnullvm") {
@@ -187,17 +184,17 @@ fn or_curdir(directory: &Path) -> &Path {
 /// -V will print the version in windres.
 /// /? will print the help in LLVM-RC and Microsoft RC.EXE.
 /// If combined, /? takes precedence over -V.
-fn guess_compiler_variant(s: &str) -> Result<Compiler, Cow<'static, str>> {
-    match Command::new(s).args(&["-V", "/?"]).output() {
+fn guess_compiler_variant(s: OsString) -> Result<Compiler, Cow<'static, str>> {
+    match Command::new(&s).args(&["-V", "/?"]).output() {
         Ok(out) => {
             if out.stdout.starts_with(b"GNU windres") {
                 Ok(Compiler {
-                    executable: s.to_string().into(),
+                    executable: s.into(),
                     tp: CompilerType::WindRes,
                 })
             } else if out.stdout.starts_with(b"OVERVIEW: Resource Converter") || out.stdout.starts_with(b"OVERVIEW: LLVM Resource Converter") {
                 Ok(Compiler {
-                    executable: s.to_string().into(),
+                    executable: s.into(),
                     tp: CompilerType::LlvmRc { has_no_preprocess: memmem::find(&out.stdout, b"no-preprocess").is_some() },
                 })
             } else {
