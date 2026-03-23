@@ -198,10 +198,10 @@ fn guess_compiler_variant(s: OsString) -> Result<Compiler, Cow<'static, str>> {
                     tp: CompilerType::LlvmRc { has_no_preprocess: memmem::find(&out.stdout, b"no-preprocess").is_some() },
                 })
             } else {
-                Err(format!("Unknown RC compiler variant: {}", s.display()).into())
+                Err(format!("Unknown RC compiler variant: {}", Path::new(&s).display()).into()) // TODO (MSRV 1.87): s.display()
             }
         }
-        Err(err) => Err(format!("Couldn't execute {}: {}", s.display(), err).into()),
+        Err(err) => Err(format!("Couldn't execute {}: {}", Path::new(&s).display(), err).into()),
     }
 }
 
