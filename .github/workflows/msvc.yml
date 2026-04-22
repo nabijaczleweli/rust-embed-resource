@@ -27,9 +27,6 @@ jobs:
           targets: ${{ matrix.target }}
 
       - run: pip install "pefile==2024.8.26"
-      - if: contains(matrix.rust_version, '1.76')
-        run: cp .github/workflows/msvc/Cargo.lock .
-
       - run: cargo build --verbose --release --target ${{ matrix.target }} --workspace
 
       # Runner is x86_64, can only run i686 and x86_64
