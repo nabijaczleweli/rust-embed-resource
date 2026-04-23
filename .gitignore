@@ -5,6 +5,7 @@
 !appveyor.yml
 !LICENSE
 !Cargo.toml
+!Cargo.lock
 !rustfmt.toml
 !build.rs
 !*.rc
