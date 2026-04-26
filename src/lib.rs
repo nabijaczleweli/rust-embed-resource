@@ -657,7 +657,7 @@ mod windres {
 
 
     fn is_runnable(s: &str) -> bool {
-        Command::new(s).spawn().map(|mut c| c.kill()).is_ok()
+        Command::new(s).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null()).spawn().map(|mut c| c.kill()).is_ok()
     }
     fn if_runnable<Mt: FnOnce(&str) -> CompilerType>(executable: Cow<'static, str>, maketp: Mt) -> Result<Compiler, Cow<'static, str>> {
         if is_runnable(&executable) {
