@@ -633,14 +633,14 @@ fn env_target_and_rc() -> Result<(String, Option<OsString>), Cow<'static, str>> 
 mod windres {
     use self::super::{ParameterBundle, apply_parameters};
     use std::process::{Command, Stdio};
+    use std::ffi::{OsString, OsStr};
     use std::borrow::Cow;
     use std::path::Path;
-    use std::ffi::OsStr;
     use memchr::memmem;
     use std::fs;
 
     #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
-    enum CompilerType {
+    pub enum CompilerType {
         /// LLVM-RC
         ///
         /// Requires a separate C preprocessor step on the source RC file
@@ -651,19 +651,22 @@ mod windres {
 
     #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
     pub struct Compiler {
-        tp: CompilerType,
-        executable: Cow<'static, str>,
+        pub tp: CompilerType,
+        pub executable: Cow<'static, OsStr>,
     }
 
 
     fn is_runnable(s: &str) -> bool {
         Command::new(s).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null()).spawn().map(|mut c| c.kill()).is_ok()
     }
-    fn if_runnable<Mt: FnOnce(&str) -> CompilerType>(executable: Cow<'static, str>, maketp: Mt) -> Result<Compiler, Cow<'static, str>> {
+    fn if_runnable(executable: Cow<'static, str>, maketp: fn(&str) -> CompilerType) -> Result<Compiler, Cow<'static, str>> {
         if is_runnable(&executable) {
             Ok(Compiler {
                 tp: maketp(&executable),
-                executable: executable,
+                executable: match executable {
+                    Cow::Owned(e) => Cow::Owned(OsString::from(e)),
+                    Cow::Borrowed(e) => Cow::Borrowed(OsStr::new(e)),
+                },
             })
         } else {
             Err(executable)
@@ -714,7 +717,7 @@ mod windres {
                                 .args(&["--", &preprocessed_path])
                                 .stdin(Stdio::piped())
                                 .current_dir(or_curdir(Path::new(resource).parent().expect("Resource parent nonexistent?"))),
-                                &self.executable,
+                                Path::new(&self.executable),
                                 "compile",
                                 &preprocessed_path,
                                 &out_file)?;
@@ -725,7 +728,7 @@ mod windres {
                                                  "-D",
                                                  "-I",
                                                  parameters),
-                                &self.executable,
+                                Path::new(&self.executable),
                                 "compile",
                                 resource,
                                 &out_file)?;
@@ -761,11 +764,11 @@ mod windres {
         to
     }
 
-    fn try_command(cmd: &mut Command, exec: &str, action: &str, whom: &str, whre: &str) -> Result<(), Cow<'static, str>> {
+    fn try_command(cmd: &mut Command, exec: &Path, action: &str, whom: &str, whre: &str) -> Result<(), Cow<'static, str>> {
         match cmd.status() {
             Ok(stat) if stat.success() => Ok(()),
-            Ok(stat) => Err(format!("{} failed to {} \"{}\" into \"{}\" with {}", exec, action, whom, whre, stat).into()),
-            Err(e) => Err(format!("Couldn't execute {} to {} \"{}\" into \"{}\": {}", exec, action, whom, whre, e).into()),
+            Ok(stat) => Err(format!("{} failed to {} \"{}\" into \"{}\" with {}", exec.display(), action, whom, whre, stat).into()),
+            Err(e) => Err(format!("Couldn't execute {} to {} \"{}\" into \"{}\": {}", exec.display(), action, whom, whre, e).into()),
         }
     }
 

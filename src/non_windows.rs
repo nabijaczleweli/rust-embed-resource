@@ -2,7 +2,9 @@ use self::super::{ParameterBundle, env_target_and_rc};
 use self::super::windres::*;
 use std::ffi::{OsString, OsStr};
 use std::path::{PathBuf, Path};
+use std::process::Command;
 use std::borrow::Cow;
+use memchr::memmem;
 use std::mem;
 
 
