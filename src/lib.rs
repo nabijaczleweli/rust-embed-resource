@@ -640,7 +640,7 @@ mod windres {
     use std::fs;
 
     #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
-    pub enum CompilerType {
+    enum CompilerType {
         /// LLVM-RC
         ///
         /// Requires a separate C preprocessor step on the source RC file
@@ -651,23 +651,39 @@ mod windres {
 
     #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
     pub struct Compiler {
-        pub tp: CompilerType,
-        pub executable: Cow<'static, OsStr>,
+        tp: CompilerType,
+        executable: Cow<'static, str>,
     }
 
+
+    fn is_runnable(s: &str) -> bool {
+        Command::new(s).spawn().map(|mut c| c.kill()).is_ok()
+    }
+    fn if_runnable<Mt: FnOnce(&str) -> CompilerType>(executable: Cow<'static, str>, maketp: Mt) -> Result<Compiler, Cow<'static, str>> {
+        if is_runnable(&executable) {
+            Ok(Compiler {
+                tp: maketp(&executable),
+                executable: executable,
+            })
+        } else {
+            Err(executable)
+        }
+    }
     impl Compiler {
-        pub fn llvm_rc(executable: Cow<'static, OsStr>) -> Self {
-            Compiler {
-                tp: CompilerType::LlvmRc {
-                    has_no_preprocess: Command::new(&executable)
+        pub fn llvm_rc(executable: Cow<'static, str>) -> Result<Compiler, Cow<'static, str>> {
+            if_runnable(executable, |executable| {
+                CompilerType::LlvmRc {
+                    has_no_preprocess: Command::new(executable)
                         .arg("/?")
                         .output()
                         .ok()
                         .map(|out| memmem::find(&out.stdout, b"no-preprocess").is_some())
                         .unwrap_or(false),
-                },
-                executable: executable,
-            }
+                }
+            })
+        }
+        pub fn windres(executable: Cow<'static, str>) -> Result<Compiler, Cow<'static, str>> {
+            if_runnable(executable, |_| CompilerType::WindRes)
         }
 
         pub fn compile<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>, Wp: FnOnce(&mut Command) -> &mut Command>(
@@ -684,7 +700,7 @@ mod windres {
                                   .include(out_dir)
                                   .expand()).map_err(|e| e.to_string())?;
 
-                    try_command(Command::new(&self.executable)
+                    try_command(Command::new(&*self.executable)
                                 .args(&[fo, &out_file])
                                 .args(&[c, "65001"]) // UTF-8, cf. https://github.com/nabijaczleweli/rust-embed-resource/pull/73
                                 .args(if has_no_preprocess {
@@ -698,18 +714,18 @@ mod windres {
                                 .args(&["--", &preprocessed_path])
                                 .stdin(Stdio::piped())
                                 .current_dir(or_curdir(Path::new(resource).parent().expect("Resource parent nonexistent?"))),
-                                Path::new(&self.executable),
+                                &self.executable,
                                 "compile",
                                 &preprocessed_path,
                                 &out_file)?;
                 }
                 CompilerType::WindRes => {
-                    try_command(apply_parameters(windres_params(Command::new(&self.executable)
+                    try_command(apply_parameters(windres_params(Command::new(&*self.executable)
                                                      .args(&["--input", resource, "--output", &out_file, "--include-dir", out_dir, "--output-format=coff"])),
                                                  "-D",
                                                  "-I",
                                                  parameters),
-                                Path::new(&self.executable),
+                                &self.executable,
                                 "compile",
                                 resource,
                                 &out_file)?;
@@ -745,11 +761,11 @@ mod windres {
         to
     }
 
-    fn try_command(cmd: &mut Command, exec: &Path, action: &str, whom: &str, whre: &str) -> Result<(), Cow<'static, str>> {
+    fn try_command(cmd: &mut Command, exec: &str, action: &str, whom: &str, whre: &str) -> Result<(), Cow<'static, str>> {
         match cmd.status() {
             Ok(stat) if stat.success() => Ok(()),
-            Ok(stat) => Err(format!("{} failed to {} \"{}\" into \"{}\" with {}", exec.display(), action, whom, whre, stat).into()),
-            Err(e) => Err(format!("Couldn't execute {} to {} \"{}\" into \"{}\": {}", exec.display(), action, whom, whre, e).into()),
+            Ok(stat) => Err(format!("{} failed to {} \"{}\" into \"{}\" with {}", exec, action, whom, whre, stat).into()),
+            Err(e) => Err(format!("Couldn't execute {} to {} \"{}\" into \"{}\": {}", exec, action, whom, whre, e).into()),
         }
     }
 
