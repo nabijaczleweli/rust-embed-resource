@@ -22,7 +22,7 @@ impl ResourceCompiler {
     }
 
     pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>>(
-        &self, out_dir: &str, prefix: &str, resource: &str, parameters: ParameterBundle<Ms, Mi, Is, Ii>)
+        self, out_dir: &str, prefix: &str, resource: &str, parameters: ParameterBundle<Ms, Mi, Is, Ii>)
         -> Result<String, Cow<'static, str>> {
         // Under some msys2 environments, $MINGW_CHOST has the correct target for
         // GNU windres or llvm-windres (clang32, clang64, or clangarm64)
