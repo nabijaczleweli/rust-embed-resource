@@ -629,7 +629,7 @@ fn env_target_and_rc() -> Result<(String, Option<OsString>), Cow<'static, str>> 
 }
 
 
-// #[allow(unused)]
+#[cfg(any(not(target_os = "windows"), all(target_os = "windows", not(target_env = "msvc"))))]
 mod windres {
     use self::super::{ParameterBundle, apply_parameters};
     use std::process::{Command, Stdio};
