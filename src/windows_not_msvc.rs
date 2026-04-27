@@ -8,8 +8,8 @@ use std::{env, mem};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ResourceCompiler {
-    compiler: Result<Compiler, Cow<'static, str>>,
     windres_target: Cow<'static, OsStr>,
+    compiler: Result<Compiler, Cow<'static, str>>,
 }
 
 
@@ -19,19 +19,24 @@ impl ResourceCompiler {
         // Under some msys2 environments, $MINGW_CHOST has the correct target for
         // GNU windres or llvm-windres (clang32, clang64, or clangarm64)
         let target = env::var_os("TARGET").expect("No TARGET env var");
-        let windres_target = env::var_os("MINGW_CHOST").map(Cow::Owned).unwrap_or_else(|| {
-            OsStr::new(match target.as_encoded_bytes() {
-                    [b'x', b'8', b'6', b'_', b'6', b'4', ..] => "pe-x86-64", // "x86_64"
-                    [b'a', b'a', b'r', b'c', b'h', b'6', b'4', ..] => "pe-aarch64-little", // "aarch64"
-                    // windres has "pe-aarch64-little" in the strings but doesn't actually accept it on my machine,
-                    // llvm-windres only has i686 and amd64; still unported
-                    _ => "pe-i386",
-                })
-                .into()
-        });
+        let compiler = Compiler::choose(&target);
         ResourceCompiler {
-            compiler: Compiler::choose(&target),
-            windres_target: windres_target,
+            windres_target: match compiler.as_ref().map(|c| c.tp) {
+                Ok(CompilerType::WindRes) => {
+                    env::var_os("MINGW_CHOST").map(Cow::Owned).unwrap_or_else(|| {
+                        OsStr::new(match target.as_encoded_bytes() {
+                                [b'x', b'8', b'6', b'_', b'6', b'4', ..] => "pe-x86-64", // "x86_64"
+                                [b'a', b'a', b'r', b'c', b'h', b'6', b'4', ..] => "pe-aarch64-little", // "aarch64"
+                                // windres has "pe-aarch64-little" in the strings but doesn't actually accept it on my machine,
+                                // llvm-windres only has i686 and amd64; still unported
+                                _ => "pe-i386",
+                            })
+                            .into()
+                    })
+                }
+                _ => OsStr::new("").into(),
+            },
+            compiler: compiler,
         }
     }
 
