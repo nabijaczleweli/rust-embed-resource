@@ -18,8 +18,9 @@ impl ResourceCompiler {
     pub fn new() -> ResourceCompiler {
         // Under some msys2 environments, $MINGW_CHOST has the correct target for
         // GNU windres or llvm-windres (clang32, clang64, or clangarm64)
+        let rust_target = env::var_os("TARGET").expect("No TARGET env var");
         let target = env::var_os("MINGW_CHOST").map(Cow::Owned).unwrap_or_else(|| {
-            OsStr::new(match env::var_os("TARGET").expect("No TARGET env var").as_encoded_bytes() {
+            OsStr::new(match rust_target.as_encoded_bytes() {
                     [b'x', b'8', b'6', b'_', b'6', b'4', ..] => "pe-x86-64", // "x86_64"
                     [b'a', b'a', b'r', b'c', b'h', b'6', b'4', ..] => "pe-aarch64-little", // "aarch64"
                     // windres has "pe-aarch64-little" in the strings but doesn't actually accept it on my machine,
@@ -29,7 +30,7 @@ impl ResourceCompiler {
                 .into()
         });
         ResourceCompiler {
-            compiler: Compiler::choose(&target),
+            compiler: Compiler::choose(&rust_target),
             target: target,
         }
     }
