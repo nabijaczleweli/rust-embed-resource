@@ -9,7 +9,7 @@ use std::{env, mem};
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ResourceCompiler {
     compiler: Result<Compiler, Cow<'static, str>>,
-    target: Cow<'static, OsStr>,
+    windres_target: Cow<'static, OsStr>,
 }
 
 
@@ -18,8 +18,9 @@ impl ResourceCompiler {
     pub fn new() -> ResourceCompiler {
         // Under some msys2 environments, $MINGW_CHOST has the correct target for
         // GNU windres or llvm-windres (clang32, clang64, or clangarm64)
-        let target = env::var_os("MINGW_CHOST").map(Cow::Owned).unwrap_or_else(|| {
-            OsStr::new(match env::var_os("TARGET").expect("No TARGET env var").as_encoded_bytes() {
+        let target = env::var_os("TARGET").expect("No TARGET env var");
+        let windres_target = env::var_os("MINGW_CHOST").map(Cow::Owned).unwrap_or_else(|| {
+            OsStr::new(match target.as_encoded_bytes() {
                     [b'x', b'8', b'6', b'_', b'6', b'4', ..] => "pe-x86-64", // "x86_64"
                     [b'a', b'a', b'r', b'c', b'h', b'6', b'4', ..] => "pe-aarch64-little", // "aarch64"
                     // windres has "pe-aarch64-little" in the strings but doesn't actually accept it on my machine,
@@ -30,7 +31,7 @@ impl ResourceCompiler {
         });
         ResourceCompiler {
             compiler: Compiler::choose(&target),
-            target: target,
+            windres_target: windres_target,
         }
     }
 
@@ -53,7 +54,7 @@ impl ResourceCompiler {
                          "-no-preprocess",
                          |c| {
                              c.arg("--target")
-                                 .arg(self.target)
+                                 .arg(self.windres_target)
                                  .args(&["-c", "65001"]) // UTF-8, cf. https://github.com/nabijaczleweli/rust-embed-resource/pull/73
                          })
     }
