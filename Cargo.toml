@@ -9,11 +9,11 @@ edition = "2021"
 rust-version = "1.76"
 license = "MIT"
 # Remember to also update in appveyor.yml
-# Remember to also update in src/lib.rs ~L40 (Cargo.toml example)
-# Remember to also update in README
 # Remember to also update in .github/workflows/msvc/test.py
 # Remember to also update in .github/workflows/msvc/version.rc
-version = "3.0.9"
+# Remember to also update in src/lib.rs ~L40 (Cargo.toml example)
+# Remember to also update in README
+version = "3.0.10"
 authors = ["наб <nabijaczleweli@nabijaczleweli.xyz>",
            "Cat Plus Plus <piotrlegnica@piotrl.pl>",
            "Liigo <liigo@qq.com>",
@@ -41,7 +41,8 @@ authors = ["наб <nabijaczleweli@nabijaczleweli.xyz>",
            "Rene Leonhardt",
            "ssrlive",
            "Kan-Ru Chen <kanru@kanru.info>",
-           "Tony <legendmastertony@gmail.com>"]
+           "Tony <legendmastertony@gmail.com>",
+           "Berrysoft <Strawberry_Str@hotmail.com>"]
 exclude = ["*.enc"]
 
 
