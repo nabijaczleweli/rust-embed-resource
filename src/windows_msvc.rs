@@ -72,6 +72,10 @@ pub fn find_windows_sdk_tool_impl(tool: &str) -> Option<PathBuf> {
 
 
 fn find_with_vswhom(arch: Arch, tool: &str) -> Option<PathBuf> {
+    if !matches!(arch, Arch::X86 | Arch::X64) {
+        return None;
+    }
+
     let res = VsFindResult::search();
     res.as_ref()
         .and_then(|res| res.windows_sdk_root.as_ref())
