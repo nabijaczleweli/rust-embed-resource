@@ -137,8 +137,6 @@ extern crate cc;
 #[cfg(any(not(target_os = "windows"), all(target_os = "windows", not(target_env = "msvc"))))]
 extern crate memchr;
 #[cfg(all(target_os = "windows", target_env = "msvc"))]
-extern crate vswhom;
-#[cfg(all(target_os = "windows", target_env = "msvc"))]
 extern crate winreg;
 extern crate rustc_version;
 extern crate toml;

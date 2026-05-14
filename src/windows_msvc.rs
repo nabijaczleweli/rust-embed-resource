@@ -3,7 +3,6 @@ use std::path::{PathBuf, Path, MAIN_SEPARATOR};
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::atomic::AtomicBool;
 use std::process::Command;
-use vswhom::VsFindResult;
 use std::borrow::Cow;
 use winreg::enums::*;
 use std::ffi::OsStr;
@@ -67,35 +66,8 @@ pub fn find_windows_sdk_tool_impl(tool: &str) -> Option<PathBuf> {
         .or_else(|| find_windows_kits_tool("KitsRoot81", arch, tool))
         .or_else(|| find_windows_kits_tool("KitsRoot", arch, tool))
         .or_else(|| find_latest_windows_sdk_tool(arch, tool))
-        .or_else(|| find_with_vswhom(arch, tool))
 }
 
-
-fn find_with_vswhom(arch: Arch, tool: &str) -> Option<PathBuf> {
-    let res = VsFindResult::search();
-    res.as_ref()
-        .and_then(|res| res.windows_sdk_root.as_ref())
-        .map(PathBuf::from)
-        .and_then(|mut root| {
-            let ver = root.file_name().expect("malformed vswhom-returned SDK root").to_os_string();
-            root.pop();
-            root.pop();
-            root.push("bin");
-            root.push(ver);
-            try_bin_dir(root, "x86", "x64", "arm64", arch)
-        })
-        .and_then(|pb| try_tool(pb, tool))
-        .or_else(move || {
-            res.and_then(|res| res.windows_sdk_root)
-                .map(PathBuf::from)
-                .and_then(|mut root| {
-                    root.pop();
-                    root.pop();
-                    try_bin_dir(root, "bin/x86", "bin/x64", "bin/arm64", arch)
-                })
-                .and_then(|pb| try_tool(pb, tool))
-        })
-}
 
 // Windows 8 - 10
 fn find_windows_kits_tool(key: &str, arch: Arch, tool: &str) -> Option<PathBuf> {
