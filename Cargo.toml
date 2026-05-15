@@ -6,3 +6,4 @@ edition = "2024"
 
 [build-dependencies]
 embed-resource = "3.0.9"
+# embed-resource = { git = "https://github.com/nabijaczleweli/rust-embed-resource", branch = "no-vswhom" }
