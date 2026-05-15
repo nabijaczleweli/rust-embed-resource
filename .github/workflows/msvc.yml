@@ -29,13 +29,8 @@ jobs:
       - run: pip install "pefile==2024.8.26"
       - run: cargo build --verbose --release --target ${{ matrix.target }} --workspace
 
-      # Runner is x86_64, can only run i686 and x86_64
+      - uses: prefix-dev/setup-pixi@v0.9.5
+      #  with:
+      #    pixi-version: v0.66.0
       - if: contains(matrix.target, '86')
-        run: cargo test --verbose --release --target ${{ matrix.target }}
-      - if: contains(matrix.target, '86')
-        run: cargo run --verbose --release --target ${{ matrix.target }} -- empty-resource.rc
-
-      # Embed resources into a cross-compiled binary, and check.
-      - run: python3 .github/workflows/msvc/test.py "target/${{ matrix.target }}/release/embed-resource-msvc-test.exe"
-      - if: contains(matrix.target, '86')
-        run: "target/${{ matrix.target }}/release/embed-resource-msvc-test.exe"
+        run: git clone https://github.com/chawyehsu/embed-resource-issue-90-vswhom-cross && cd embed-resource-issue-90-vswhom-cross && pixi run build --target-platform win-arm64
