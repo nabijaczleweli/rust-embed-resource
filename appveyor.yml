@@ -20,8 +20,8 @@ install:
 
 build: off
 build_script:
-  - git clone https://github.com/chawyehsu/embed-resource-issue-90-vswhom-cross ../embed-resource-issue-90-vswhom-cross
-  - cd ../embed-resource-issue-90-vswhom-cross && sed -i -e '8d' -e '9s/..//;s/no-vswhom/no-arm64-vswhom/' Cargo.toml && sed -i "s/-o out/& -v/" pixi.toml && pixi run build --target-platform win-arm64
+  - git clone -b direct https://github.com/nabijaczleweli/rust-embed-resource  ../embed-resource-issue-90-vswhom-cross
+  - cd ../embed-resource-issue-90-vswhom-cross && sed -i "s/-o out/& -v/" pixi.toml && pixi run build --target-platform win-arm64
 
 notifications:
   - provider: Email
