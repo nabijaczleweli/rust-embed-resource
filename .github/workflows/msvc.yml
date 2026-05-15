@@ -39,3 +39,9 @@ jobs:
       - run: python3 .github/workflows/msvc/test.py "target/${{ matrix.target }}/release/embed-resource-msvc-test.exe"
       - if: contains(matrix.target, '86')
         run: "target/${{ matrix.target }}/release/embed-resource-msvc-test.exe"
+
+      - uses: prefix-dev/setup-pixi@v0.9.5
+      #  with:
+      #    pixi-version: v0.66.0
+      - if: contains(matrix.target, '86')
+        run: git clone https://github.com/chawyehsu/embed-resource-issue-90-vswhom-cross && cd embed-resource-issue-90-vswhom-cross && pixi run build --target-platform win-arm64
