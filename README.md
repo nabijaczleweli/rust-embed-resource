@@ -5,7 +5,7 @@ Minimal reproducible project for:
 
 ## Steps
 
-On a Windows x86-64 machine with Visual Studio 2022 installed, and [pixi] installed:
+On a Windows x86-64 machine with Visual Studio 2022 and C++ build tools installed, and [pixi] installed:
 
 ```pwsh
 pixi run build --target-platform win-arm64

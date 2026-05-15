@@ -7,4 +7,4 @@ preview = ["pixi-build"]
 backend = { name = "pixi-build-rust", version = "*" }
 
 [tasks]
-build = { cmd = "pixi publish -o out" }
+build = { cmd = "pixi build -o out" }
