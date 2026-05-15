@@ -1,0 +1,8 @@
+[package]
+name = "vswhom-cross"
+version = "0.1.0"
+authors = ["Chawye Hsu <su+git@chawyehsu.com>"]
+edition = "2024"
+
+[build-dependencies]
+embed-resource = "3.0.9"

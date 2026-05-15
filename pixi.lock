@@ -1,0 +1,10 @@
+version: 7
+platforms:
+- name: win-64
+- name: win-arm64
+environments:
+  default:
+    channels:
+    - url: https://prefix.dev/conda-forge/
+    packages: {}
+packages: []
