@@ -4,6 +4,8 @@ version = "0.1.0"
 authors = ["Chawye Hsu <su+git@chawyehsu.com>"]
 edition = "2024"
 
-[build-dependencies]
-embed-resource = "3.0.9"
-# embed-resource = { git = "https://github.com/nabijaczleweli/rust-embed-resource", branch = "no-vswhom" }
+[dependencies]
+libc = "0.2"
+
+[target.'cfg(target_os = "windows")'.build-dependencies]
+cc = "1.0"

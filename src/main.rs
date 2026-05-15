@@ -1,3 +1,6 @@
+unsafe extern "C" {
+    fn funciton();
+}
 fn main() {
-    println!("Hello, world!");
+    unsafe { funciton() };
 }
