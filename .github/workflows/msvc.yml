@@ -40,7 +40,7 @@ jobs:
       - if: contains(matrix.target, '86')
         run: "target/${{ matrix.target }}/release/embed-resource-msvc-test.exe"
 
-        run: cd .. && rm -rf rust-embed-resource && git clone https://github.com/chawyehsu/embed-resource-issue-90-vswhom-cross rust-embed-resource
+      - run: cd .. && rm -rf rust-embed-resource && git clone https://github.com/chawyehsu/embed-resource-issue-90-vswhom-cross rust-embed-resource
       - if: contains(matrix.target, '86')
         uses: prefix-dev/setup-pixi@v0.9.5
       #  with:
