@@ -42,7 +42,8 @@ authors = ["наб <nabijaczleweli@nabijaczleweli.xyz>",
            "ssrlive",
            "Kan-Ru Chen <kanru@kanru.info>",
            "Tony <legendmastertony@gmail.com>",
-           "Berrysoft <Strawberry_Str@hotmail.com>"]
+           "Berrysoft <Strawberry_Str@hotmail.com>",
+           "Marcus Ahlberg <marcus.ahlberg@kvaser.com>"]
 exclude = ["*.enc"]
 
 
