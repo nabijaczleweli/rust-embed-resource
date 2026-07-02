@@ -531,6 +531,22 @@ pub fn compile_for_examples<T: AsRef<Path>,
     CompilationResult::Ok
 }
 
+/// Likewise, but only link the resource to the cdylib.
+///
+/// Only available since rustc 1.61.0, does nothing before.
+pub fn compile_for_cdylib<T: AsRef<Path>,
+                          Ms: AsRef<OsStr>,
+                          Mi: IntoIterator<Item = Ms>,
+                          Is: AsRef<OsStr>,
+                          Ii: IntoIterator<Item = Is>,
+                          P: Into<ParameterBundle<Ms, Mi, Is, Ii>>>(
+    resource_file: T, parameters: P)
+    -> CompilationResult {
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into()));
+    println!("cargo:rustc-link-arg-cdylib={}", out_file);
+    CompilationResult::Ok
+}
+
 /// Likewise, but link the resource into *every* artifact: binaries, cdylibs, examples, tests (`[[test]]`/`#[test]`/doctest),
 /// benchmarks, &c.
 ///

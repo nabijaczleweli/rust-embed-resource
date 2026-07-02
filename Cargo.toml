@@ -13,7 +13,7 @@ license = "MIT"
 # Remember to also update in .github/workflows/msvc/version.rc
 # Remember to also update in src/lib.rs ~L40 (Cargo.toml example)
 # Remember to also update in README
-version = "3.0.10"
+version = "3.0.11"
 authors = ["наб <nabijaczleweli@nabijaczleweli.xyz>",
            "Cat Plus Plus <piotrlegnica@piotrl.pl>",
            "Liigo <liigo@qq.com>",
