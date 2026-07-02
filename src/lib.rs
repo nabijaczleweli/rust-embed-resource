@@ -548,6 +548,20 @@ pub fn compile_for_everything<T: AsRef<Path>,
     CompilationResult::Ok
 }
 
+/// Likewise, but only link the resource to cdylibs.
+pub fn compile_for_cdylibs<T: AsRef<Path>,
+                           Ms: AsRef<OsStr>,
+                           Mi: IntoIterator<Item = Ms>,
+                           Is: AsRef<OsStr>,
+                           Ii: IntoIterator<Item = Is>,
+                           P: Into<ParameterBundle<Ms, Mi, Is, Ii>>>(
+    resource_file: T, parameters: P)
+    -> CompilationResult {
+    let (_, _, out_file) = try_compile_impl!(compile_impl(resource_file.as_ref(), parameters.into()));
+    println!("cargo:rustc-link-arg-cdylib={}", out_file);
+    CompilationResult::Ok
+}
+
 fn compile_impl<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>, P: Into<ParameterBundle<Ms, Mi, Is, Ii>>>(
     resource_file: &Path, parameters: P)
     -> Result<(&str, String, String), CompilationResult> {
