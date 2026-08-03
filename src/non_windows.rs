@@ -63,9 +63,10 @@ impl Compiler {
 fn guess_compiler_variant(s: OsString) -> Result<Compiler, Cow<'static, str>> {
     match Command::new(&s).args(&["-V", "/?"]).output() {
         Ok(out) => {
-            let tp = if out.stdout.starts_with(b"GNU windres") {
+            let first = out.stdout.split(|b| *b == b'\n').next().unwrap();
+            let tp = if memmem::find(first, b"GNU windres").is_some() {
                 CompilerType::WindRes
-            } else if out.stdout.starts_with(b"OVERVIEW: Resource Converter") || out.stdout.starts_with(b"OVERVIEW: LLVM Resource Converter") {
+            } else if memmem::find(first, b"Resource Converter").is_some() {
                 CompilerType::LlvmRc { has_no_preprocess: memmem::find(&out.stdout, b"no-preprocess").is_some() }
             } else {
                 return Err(format!("Unknown RC compiler variant: {}", Path::new(&s).display()).into()); // TODO (MSRV 1.87): s.display()
