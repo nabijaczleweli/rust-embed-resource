@@ -1,6 +1,7 @@
 use self::super::ParameterBundle;
 use self::super::windres::*;
 use std::path::{PathBuf, MAIN_SEPARATOR};
+use std::process::Command;
 use std::borrow::Cow;
 use std::ffi::OsStr;
 use std::{env, mem};
@@ -70,10 +71,19 @@ impl Compiler {
         match target.as_encoded_bytes() {
             // "aarch64".."gnullvm"
             // https://github.com/llvm/llvm-project/issues/125371
-            [b'a', b'a', b'r', b'c', b'h', b'6', b'4', .., b'g', b'n', b'u', b'l', b'l', b'v', b'm'] => Compiler::llvm_rc("llvm-rc".into()),
+            [b'a', b'a', b'r', b'c', b'h', b'6', b'4', .., b'g', b'n', b'u', b'l', b'l', b'v', b'm'] if !windres_is_gnu_windres() => {
+                Compiler::llvm_rc("llvm-rc".into())
+            }
 
             _ => Compiler::windres("windres".into()),
         }
+    }
+}
+
+fn windres_is_gnu_windres() -> bool {
+    match Command::new("windres").args(&["-V", "/?"]).output() {
+        Ok(out) => !out.stdout.starts_with(b"llvm-windres"),
+        Err(_) => false,
     }
 }
 
