@@ -62,7 +62,7 @@ memchr = "2.7"
 vswhom = "0.1"
 
 [target.'cfg(all(target_os = "windows", target_env = "msvc"))'.dependencies.winreg]
-version = "0.55"
+version = "0.56"
 default-features = false
 
 
