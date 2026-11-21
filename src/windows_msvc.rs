@@ -27,9 +27,9 @@ impl ResourceCompiler {
     }
 
     pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>>(
-        self, out_dir: &str, prefix: &str, resource: &str, parameters: ParameterBundle<Ms, Mi, Is, Ii>)
+        self, out_dir: &str, prefix: &str, resource: &str, parameters: ParameterBundle<Ms, Mi, Is, Ii>, link_arg: bool)
         -> Result<String, Cow<'static, str>> {
-        let out_file = format!("{}{}{}.lib", out_dir, MAIN_SEPARATOR, prefix);
+        let out_file = format!("{}{}{}.{}", out_dir, MAIN_SEPARATOR, prefix, if link_arg { "res" } else { "lib" });
         let (_, rc) = env_target_and_rc()?;
         let rc = rc.map(PathBuf::from).or_else(|| find_windows_sdk_tool_impl("rc.exe"));
         // `.res`es are linkable under MSVC as well as normal libraries.

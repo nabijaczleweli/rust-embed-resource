@@ -24,7 +24,7 @@ impl ResourceCompiler {
     }
 
     pub fn compile_resource<Ms: AsRef<OsStr>, Mi: IntoIterator<Item = Ms>, Is: AsRef<OsStr>, Ii: IntoIterator<Item = Is>>(
-        self, out_dir: &str, prefix: &str, resource: &str, parameters: ParameterBundle<Ms, Mi, Is, Ii>)
+        self, out_dir: &str, prefix: &str, resource: &str, parameters: ParameterBundle<Ms, Mi, Is, Ii>, _: bool)
         -> Result<String, Cow<'static, str>> {
         self.compiler.expect("Not supported but we got to compile_resource()?").compile(out_dir,
                                                                                         prefix,
